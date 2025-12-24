@@ -1,4 +1,5 @@
 /.venv
+/venv
 /ORDINANCE.ini
 /__pycache__
 make_venv.bat
