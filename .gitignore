@@ -1,3 +1,6 @@
 /.venv
 /ORDINANCE.ini
 /__pycache__
+make_venv.bat
+checksums.ini
+load_venv.bat

@@ -39,16 +39,17 @@ def ord_input():
     global inputs
     json_data = request.json
 
-    input = json_data['input']
-    pawn_name = json_data['pawn_name']
+    input = str(json_data['input'])
+    pawn_name = str(json_data['pawn_name'])
 
     print(input, pawn_name)
 
     if input == "BEGIN":
         inputs = []
+        print("BEGIN ORDINANCE")
         return jsonify({'message': 'BEGIN ORDINANCE'}), 200
     
-    inputs.append(input)
+    inputs.append(str(input))
     print(inputs)
     return jsonify({'message': inputs}), 200
 
@@ -63,7 +64,7 @@ def ord_render():
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     for input in enumerate(inputs):
-        print(input)
+        print(input[1])
     print(inputs)
 
     return jsonify({'message': "RENDER"}), 200
