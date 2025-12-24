@@ -5,6 +5,7 @@ import os
 from makeConfig import makeConfig
 import configHelper
 config_file = "ORDINANCE.ini"
+inputs = []
 app = Flask(__name__)
 if os.path.isfile(config_file) == False:
     makeConfig()
@@ -25,9 +26,17 @@ def pawn_submit():
     configHelper.set_config(config_file, "ORDINANCE", "trigger", trigger)
     
     return jsonify({'message': 'done'}), 200
+@app.route("/ord/pawn/state", methods=['POST'])
+def set_pawn_state():
+    json_data = request.json
+
+    state = json_data['state']
+    configHelper.set_config(config_file, "ORDINANCE", "state", state)
+    return jsonify({'message': 'done'}), 200
 
 @app.route("/ord/input", methods=['POST'])
 def ord_input():
+    global inputs
     json_data = request.json
 
     input = json_data['input']
@@ -35,7 +44,29 @@ def ord_input():
 
     print(input, pawn_name)
 
-    return jsonify({'message': 'input made'})
+    if input == "BEGIN":
+        inputs = []
+        return jsonify({'message': 'BEGIN ORDINANCE'}), 200
+    
+    inputs.append(input)
+    print(inputs)
+    return jsonify({'message': inputs}), 200
+
+@app.route("/ord/input/render",  methods=['GET'])
+def ord_render():
+    global inputs
+    state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    if state == "dead":
+        return jsonify({'message': "ORD_ERROR"}), 200
+    if len(inputs) < 1:
+        print("just RENDER")
+        return jsonify({'message': "RENDER"}), 200
+    # Some RENDER CODE
+    for input in enumerate(inputs):
+        print(input)
+    print(inputs)
+
+    return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
 
     app.run(host="0.0.0.0", port=5000)
