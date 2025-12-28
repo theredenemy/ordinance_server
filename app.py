@@ -63,6 +63,9 @@ def ord_render():
         return jsonify({'message': "ORD_ERROR"}), 200
     if len(inputs) < 1:
         print("just RENDER")
+        with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
+            f.write("RENDER")
+            f.close
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     skip = False
@@ -76,7 +79,6 @@ def ord_render():
             skip = True
         else:
             ren_inputs.append(inputs[i])
-    
     print(ren_inputs)
     with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
         f.write("\n".join(ren_inputs))
