@@ -5,3 +5,4 @@
 make_venv.bat
 checksums.ini
 load_venv.bat
+inputs.txt
