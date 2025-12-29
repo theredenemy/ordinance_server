@@ -83,7 +83,7 @@ def ord_render():
     with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
         f.write("\n".join(ren_inputs))
         f.close
-
+    inputs = []
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
 
