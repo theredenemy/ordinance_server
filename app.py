@@ -67,6 +67,8 @@ def ord_render():
         with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
             f.write("RENDER")
             f.close
+        inputs = []
+        client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     skip = False
