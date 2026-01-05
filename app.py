@@ -5,6 +5,7 @@ import os
 from makeConfig import makeConfig
 import configHelper
 import time
+import client
 config_file = "ORDINANCE.ini"
 inputs = []
 app = Flask(__name__)
@@ -84,6 +85,7 @@ def ord_render():
         f.write("\n".join(ren_inputs))
         f.close
     inputs = []
+    client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
 

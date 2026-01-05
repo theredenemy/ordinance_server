@@ -30,4 +30,4 @@ def set_config(configfile, section, option, value=0):
     config.set(section, option, str(value))
     with open(configfile, 'w', encoding='utf-8', errors='ignore') as f:
         config.write(f)
-    return
+    return True
