@@ -14,14 +14,16 @@ def SendFile(thefile, ip, port):
         file = open(thefile, 'rb')
         filesize = os.path.getsize(thefile)
         filename = pathlib.Path(thefile)
-
+        mainsize = SIZE
+        if filesize >= SIZE:
+            mainsize = filesize
         client.send(f"{filename}".encode())
         while True:
             data = client.recv(SIZE).decode()
             if data == "SENT":
                 data = "wait"
                 break
-        client.send(str(filesize).encode())
+        client.send(str(mainsize).encode())
         while True:
             data = client.recv(SIZE).decode()
             if data == "SENT":
