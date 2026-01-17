@@ -36,9 +36,11 @@ def set_pawn_state():
     configHelper.set_config(config_file, "ORDINANCE", "state", state)
     return jsonify({'message': 'done'}), 200
 
-@app.route("/ord/input", methods=['POST'])
+@app.route("/ord/input", methods=['POST', 'GET'])
 def ord_input():
     global inputs
+    if request.method == 'GET':
+        return jsonify({'message': inputs}), 200
     json_data = request.json
 
     input = str(json_data['input'].upper())
