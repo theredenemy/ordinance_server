@@ -6,6 +6,7 @@ from makeConfig import makeConfig
 import configHelper
 import time
 import client
+import socket
 config_file = "ORDINANCE.ini"
 inputs = []
 app = Flask(__name__)
@@ -61,9 +62,17 @@ def ord_input():
 def ord_render():
     global inputs
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    ip = configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
+    port = configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True)
     ren_inputs = []
     if state == "dead":
+        inputs = []
         return jsonify({'message': "ORD_ERROR"}), 200
+    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = conn.connect_ex((ip,port))
+    if result == 10061 or 0:
+        inputs = []
+        return jsonify({'message': "NO_INPUT"}), 200
     if len(inputs) < 1:
         print("just RENDER")
         with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
@@ -89,7 +98,7 @@ def ord_render():
         f.write("\n".join(ren_inputs))
         f.close
     inputs = []
-    client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
+    client.SendFile("inputs.txt", ip, port)
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
 
