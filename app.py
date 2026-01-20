@@ -68,18 +68,15 @@ def ord_render():
     if state == "dead":
         inputs = []
         return jsonify({'message': "ORD_ERROR"}), 200
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = conn.connect_ex((ip,port))
-    if result:
-        inputs = []
-        return jsonify({'message': "NO_INPUT"}), 200
     if len(inputs) < 1:
         print("just RENDER")
         with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
             f.write("RENDER")
             f.close
         inputs = []
-        client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
+        sendfile = client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
+        if not sendfile:
+            return jsonify({'message': "NO_INPUT"}), 200
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     skip = False
@@ -98,7 +95,10 @@ def ord_render():
         f.write("\n".join(ren_inputs))
         f.close
     inputs = []
-    client.SendFile("inputs.txt", ip, port)
+    sendfile = client.SendFile("inputs.txt", ip, port)
+    if not sendfile:
+        return jsonify({'message': "NO_INPUT"}), 200
+
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
 
