@@ -70,7 +70,7 @@ def ord_render():
         return jsonify({'message': "ORD_ERROR"}), 200
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     result = conn.connect_ex((ip,port))
-    if result == 10061 or result == 0:
+    if result:
         inputs = []
         return jsonify({'message': "NO_INPUT"}), 200
     if len(inputs) < 1:
