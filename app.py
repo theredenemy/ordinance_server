@@ -41,7 +41,8 @@ def set_pawn_state():
 def ord_input():
     global inputs
     if request.method == 'GET':
-        return jsonify({'message': inputs}), 200
+        joined_inputs = ' '.join(inputs)
+        return jsonify({'message': joined_inputs}), 200
     json_data = request.json
 
     input = str(json_data['input'].upper())
