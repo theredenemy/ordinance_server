@@ -15,7 +15,22 @@ if os.path.isfile(config_file) == False:
 @app.route("/")
 def main_page():
     return "<p>ORDINANCE</p>"
-
+@app.route("/ord/info")
+def show_info():
+    player = configHelper.read_config(config_file, "ORDINANCE", "player")
+    timestamp = configHelper.read_config(config_file, "ORDINANCE", "timestamp")
+    trigger = configHelper.read_config(config_file, "ORDINANCE", "trigger")
+    return jsonify({"player" : player, "timestamp" : timestamp, "trigger" : trigger}), 200
+@app.route("/ord/chat/send", methods=['POST'])
+def chat_send():
+    json_data = request.json
+    player = json_data['player']
+    steamid = json_data['steamid']
+    message = json_data['message']
+    print(player, steamid, message)
+    if message == "hello":
+        return jsonify({"valid" : True, "cmd" : f"bot_say HELLO {player} BREAK"}), 200
+    return jsonify({"valid" : False}), 200
 @app.route("/ord/pawn/submit", methods=['POST'])
 def pawn_submit():
     json_data = request.json
