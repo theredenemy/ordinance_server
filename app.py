@@ -7,6 +7,7 @@ import configHelper
 import time
 import client
 import socket
+import sqlite3
 config_file = "ORDINANCE.ini"
 inputs = []
 app = Flask(__name__)
@@ -29,7 +30,7 @@ def chat_send():
     message = json_data['message']
     print(player, steamid, message)
     time.sleep(1)
-    if message == "hello":
+    if "hello" in message.split():
         return jsonify({"valid" : True, "cmd" : f"bot_say HELLO {player} BREAK"}), 200
     return jsonify({"valid" : False}), 200
 @app.route("/ord/pawn/submit", methods=['POST'])
