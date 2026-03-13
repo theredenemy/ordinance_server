@@ -9,10 +9,22 @@ import client
 import socket
 import sqlite3
 config_file = "ORDINANCE.ini"
+chat_db = "chat.db"
 inputs = []
 app = Flask(__name__)
 if os.path.isfile(config_file) == False:
     makeConfig()
+def init_chat_db():
+    with sqlite3.connect(chat_db) as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS chat (
+                        message PRIMARY KEY,
+                        cmd TEXT
+                     )
+                     """)
+        conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
+                     VALUES ('hello', 'bot_say HELLO {player} \x03§lBREAK')
+                     """)
+
 @app.route("/")
 def main_page():
     return "<p>ORDINANCE</p>"
@@ -25,16 +37,35 @@ def show_info():
 @app.route("/ord/chat/send", methods=['POST'])
 def chat_send():
     json_data = request.json
-    player = json_data['player']
-    steamid = json_data['steamid']
-    message = json_data['message']
+    player = str(json_data['player'])
+    steamid = str(json_data['steamid'])
+    message = str(json_data['message'])
     print(player, steamid, message)
+    cmd = ""
+    valid = False
     time.sleep(1)
-    if "hello" in message.split():
-        return jsonify({"valid" : True, "cmd" : f"bot_say HELLO {player} BREAK"}), 200
-    return jsonify({"valid" : False}), 200
+    with sqlite3.connect(chat_db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT message, cmd FROM chat")
+        rows = cursor.fetchall()
+        print(rows)
+    for trigger, command in rows:
+        if message == trigger:
+            valid = True
+            cmd = command
+            break
+        if trigger in message.split():
+            valid = True
+            cmd = command
+    if valid:
+        cmd = cmd.replace("{player}", player)
+        cmd = cmd.replace("{steamid}", steamid)
+        return jsonify({"valid" : True, "cmd" : cmd}), 200
+    else:
+        return jsonify({"valid" : False}), 200
 @app.route("/ord/pawn/submit", methods=['POST'])
 def pawn_submit():
+    
     json_data = request.json
     
     player = json_data['player']
@@ -119,6 +150,6 @@ def ord_render():
 
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
-
+    init_chat_db()
     app.run(host="0.0.0.0", port=5000)
 
