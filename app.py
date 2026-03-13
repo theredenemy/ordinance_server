@@ -22,7 +22,7 @@ def init_chat_db():
                      )
                      """)
         conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
-                     VALUES ('hello', 'bot_say HELLO {player} \x03§lBREAK')
+                     VALUES ('hello', 'bot_say HELLO {player} \x07EFEFEFBREAK')
                      """)
 
 @app.route("/")
