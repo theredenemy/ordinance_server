@@ -28,6 +28,7 @@ def chat_send():
     steamid = json_data['steamid']
     message = json_data['message']
     print(player, steamid, message)
+    time.sleep(1)
     if message == "hello":
         return jsonify({"valid" : True, "cmd" : f"bot_say HELLO {player} BREAK"}), 200
     return jsonify({"valid" : False}), 200
