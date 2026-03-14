@@ -2,7 +2,6 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from flask import render_template
-from flask import render_template_string
 import os
 from makeConfig import makeConfig
 import configHelper
