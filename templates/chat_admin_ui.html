@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div class="header"><h1>CHATBOT</h1></div>
+    <div class="container">
+        <form method="post">
+            Message <input name="message"/> 
+            Command <input name="cmd"/>
+            <button type="submit" class="btn-add">ADD</button>
+        </form>
+
+        <table>
+            <tr><th>Message</th><th>Command</th><th></th></tr>
+            {% for message_t, cmd in commands %}
+            <tr>
+                <td><strong>{{ message_t }}</strong></td>
+                <td><code>{{ cmd }}</code></td>
+                <td><a href="/ord/chat/admin?delete={{ message_t }}" class="btn-del" onclick="return confirm('Delete?')">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

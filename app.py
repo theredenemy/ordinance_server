@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
+from flask import render_template
+from flask import render_template_string
 import os
 from makeConfig import makeConfig
 import configHelper
@@ -28,12 +30,33 @@ def init_chat_db():
 @app.route("/")
 def main_page():
     return "<p>ORDINANCE</p>"
+
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player")
     timestamp = configHelper.read_config(config_file, "ORDINANCE", "timestamp")
     trigger = configHelper.read_config(config_file, "ORDINANCE", "trigger")
     return jsonify({"player" : player, "timestamp" : timestamp, "trigger" : trigger}), 200
+@app.route("/ord/chat/admin", methods=['GET', 'POST'])
+def admin_chat_ui():
+    delete_button_trigger = request.args.get("delete")
+    if delete_button_trigger:
+        with sqlite3.connect(chat_db) as conn:
+            conn.execute("DELETE FROM chat WHERE message = ?", (delete_button_trigger,))
+        return '<script>window.location.href="/ord/chat/admin";</script>'
+    if request.method == "POST":
+        message = request.form.get('message')
+        cmd = request.form.get('cmd')
+        if message and cmd:
+            with sqlite3.connect(chat_db) as conn:
+                conn.execute("INSERT OR REPLACE INTO chat (message, cmd) VALUES (?, ?)", (message, cmd))
+            return '<script>window.location.href="/ord/chat/admin";</script>'
+    with sqlite3.connect(chat_db) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT message, cmd FROM chat")
+        rows = cursor.fetchall()
+    return render_template("chat_admin_ui.html", commands=rows)
+
 @app.route("/ord/chat/send", methods=['POST'])
 def chat_send():
     json_data = request.json
@@ -48,7 +71,6 @@ def chat_send():
         cursor = conn.cursor()
         cursor.execute("SELECT message, cmd FROM chat")
         rows = cursor.fetchall()
-        print(rows)
     for trigger, command in rows:
         if message == trigger:
             valid = True
@@ -150,6 +172,7 @@ def ord_render():
 
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
-    init_chat_db()
+    if os.path.isfile(chat_db):
+        init_chat_db()
     app.run(host="0.0.0.0", port=5000)
 
