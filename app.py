@@ -24,7 +24,7 @@ def init_chat_db():
                      )
                      """)
         conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
-                     VALUES ('hello', 'bot_say HELLO {player} \x07EFEFEFBREAK')
+                     VALUES ('hello', 'bot_say HELLO {player} {rgb}EFEFEFBREAK')
                      """)
 
 @app.route("/")
@@ -82,6 +82,8 @@ def chat_send():
     if valid:
         cmd = cmd.replace("{player}", player)
         cmd = cmd.replace("{steamid}", steamid)
+        cmd = cmd.replace("{rgb}", "\x07")
+        cmd = cmd.replace("{default}", "\x01")
         print(cmd)
         return jsonify({"valid" : True, "cmd" : cmd}), 200
     else:
