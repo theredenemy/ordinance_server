@@ -82,6 +82,7 @@ def chat_send():
     if valid:
         cmd = cmd.replace("{player}", player)
         cmd = cmd.replace("{steamid}", steamid)
+        print(cmd)
         return jsonify({"valid" : True, "cmd" : cmd}), 200
     else:
         return jsonify({"valid" : False}), 200
