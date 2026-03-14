@@ -49,7 +49,7 @@ def admin_chat_ui():
         cmd = request.form.get('cmd')
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
-                conn.execute("INSERT OR REPLACE INTO chat (message, cmd) VALUES (?, ?)", (message, cmd))
+                conn.execute("INSERT OR REPLACE INTO chat (message, cmd) VALUES (?, ?)", (message.lower(), cmd))
             return '<script>window.location.href="/ord/chat/admin";</script>'
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
