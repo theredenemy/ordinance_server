@@ -4,15 +4,19 @@ from flask import jsonify
 from flask import render_template
 import os
 from makeConfig import makeConfig
+from makeConfig import makeClientConfig
 import configHelper
 import time
 import client
 import socket
 import sqlite3
 config_file = "ORDINANCE.ini"
+client_config_file = "Client.ini"
 chat_db = "chat.db"
 inputs = []
 app = Flask(__name__)
+if os.path.isfile(client_config_file) == False:
+    makeClientConfig()
 if os.path.isfile(config_file) == False:
     makeConfig()
 def init_chat_db():
@@ -176,5 +180,6 @@ def ord_render():
 if __name__ == '__main__':
     if os.path.isfile(chat_db):
         init_chat_db()
+    
     app.run(host="0.0.0.0", port=5000)
 
