@@ -139,8 +139,8 @@ def ord_input():
 def ord_render():
     global inputs
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
-    ip = configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
-    port = configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True)
+    ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
+    port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
     ren_inputs = []
     if state == "dead":
         inputs = []
@@ -151,7 +151,7 @@ def ord_render():
             f.write("RENDER")
             f.close
         inputs = []
-        sendfile = client.SendFile("inputs.txt", configHelper.read_config(config_file, "Client", "ip", default_value="127.0.0.1", is_int=False), configHelper.read_config(config_file, "Client", "port", default_value=4456, is_int=True))
+        sendfile = client.SendFile("inputs.txt", ip, port)
         if not sendfile:
             return jsonify({'message': "NO_INPUT"}), 200
         return jsonify({'message': "RENDER"}), 200
