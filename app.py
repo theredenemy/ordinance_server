@@ -40,6 +40,15 @@ def show_info():
     timestamp = configHelper.read_config(config_file, "ORDINANCE", "timestamp")
     trigger = configHelper.read_config(config_file, "ORDINANCE", "trigger")
     return jsonify({"player" : player, "timestamp" : timestamp, "trigger" : trigger}), 200
+@app.route("/ord/mode", methods=['GET', 'POST'])
+def set_mode():
+    if request.method == 'GET':
+        mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
+        return jsonify({'mode': mode}), 200
+    json_data = request.json
+    mode = str(json_data['mode'])
+    configHelper.set_config(config_file, "ORDINANCE", "mode", mode)
+    return jsonify({'message': 'done'}), 200
 @app.route("/ord/chat/admin", methods=['GET', 'POST'])
 def admin_chat_ui():
     delete_button_trigger = request.args.get("delete")
