@@ -14,6 +14,7 @@ def makeConfig():
   config_file.set("ORDINANCE", "timestamp", "4102387200")
   config_file.set("ORDINANCE", "state", "alive")
   config_file.set("ORDINANCE", "trigger", "'submit'")
+  config_file.set("ORDINANCE", "mode", "game")
 
 
   with open(r"ORDINANCE.ini", 'w') as configfileObj:
