@@ -36,11 +36,15 @@ def main_page():
 
 @app.route("/ord/info")
 def show_info():
-    player = configHelper.read_config(config_file, "ORDINANCE", "player")
-    timestamp = configHelper.read_config(config_file, "ORDINANCE", "timestamp")
-    trigger = configHelper.read_config(config_file, "ORDINANCE", "trigger")
+    player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
+    timestamp = configHelper.read_config(config_file, "ORDINANCE", "timestamp", default_value="1230681600", is_int=True)
+    date = configHelper.read_config(config_file, "ORDINANCE", "date", default_value="DECEMBER 31TH 2008", is_int=False)
+    trigger = configHelper.read_config(config_file, "ORDINANCE", "trigger", default_value="submit", is_int=False)
+    team = configHelper.read_config(config_file, "ORDINANCE", "team", default_value="UNKNOWN", is_int=False)
+    weapon = configHelper.read_config(config_file, "ORDINANCE", "weapon", default_value="UNKNOWN", is_int=False)
+    playerclass = configHelper.read_config(config_file, "ORDINANCE", "playerclass", default_value="UNKNOWN", is_int=False)
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
-    return jsonify({"player" : player, "timestamp" : timestamp, "trigger" : trigger, "mode" : mode}), 200
+    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode}), 200
 @app.route("/ord/mode", methods=['GET', 'POST'])
 def set_mode():
     if request.method == 'GET':
@@ -108,11 +112,21 @@ def pawn_submit():
     
     player = json_data['player']
     timestamp = json_data['timestamp']
+    date = json_data['date']
     trigger = json_data['trigger']
-    print(player, timestamp, trigger)
+    team = json_data['team']
+    weapon = json_data['weapon']
+    playerclass = json_data['playerclass']
+    
+
+    print(player, timestamp, date, trigger, team, weapon, playerclass)
     configHelper.set_config(config_file, "ORDINANCE", "player", player)
     configHelper.set_config(config_file, "ORDINANCE", "timestamp", timestamp)
+    configHelper.set_config(config_file, "ORDINANCE", "date", date)
     configHelper.set_config(config_file, "ORDINANCE", "trigger", trigger)
+    configHelper.set_config(config_file, "ORDINANCE", "team", team)
+    configHelper.set_config(config_file, "ORDINANCE", "weapon", weapon)
+    configHelper.set_config(config_file, "ORDINANCE", "playerclass", playerclass)
     
     return jsonify({'message': 'done'}), 200
 @app.route("/ord/pawn/state", methods=['POST'])
