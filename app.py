@@ -44,7 +44,8 @@ def show_info():
     weapon = configHelper.read_config(config_file, "ORDINANCE", "weapon", default_value="UNKNOWN", is_int=False)
     playerclass = configHelper.read_config(config_file, "ORDINANCE", "playerclass", default_value="UNKNOWN", is_int=False)
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
-    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode}), 200
+    state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state}), 200
 @app.route("/ord/mode", methods=['GET', 'POST'])
 def set_mode():
     if request.method == 'GET':
