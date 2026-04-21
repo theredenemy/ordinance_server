@@ -107,7 +107,6 @@ def tokens_ui():
         cursor.execute("SELECT token FROM tokens")
         rows = cursor.fetchall()
     return render_template("tokens_ui.html", tokens=rows)
-@app.route("/admin/users/password", methods=['GET', 'POST'])
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
