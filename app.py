@@ -48,6 +48,26 @@ def logout():
 @auth_required
 def admin_panel():
     return render_template("admin_panel.html")
+@app.route("/admin/users", methods=['GET', 'POST'])
+@auth_required
+def users():
+    delete_button_trigger = request.args.get("delete")
+    if delete_button_trigger:
+        with sqlite3.connect(auth_db) as conn:
+            conn.execute("DELETE FROM users WHERE username = ?", (delete_button_trigger,))
+        return '<script>window.location.href="/admin/users";</script>'
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username and password:
+            edit_user(username, password)
+            return '<script>window.location.href="/admin/users";</script>'
+    with sqlite3.connect(auth_db) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM users")
+        rows = cursor.fetchall()
+    return render_template("users.html", users=rows)
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
