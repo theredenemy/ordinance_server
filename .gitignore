@@ -6,7 +6,7 @@ make_venv.bat
 checksums.ini
 load_venv.bat
 inputs.txt
-chat.db
+*.db
 apptest1.py
 Client.ini
 auth.db
