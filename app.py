@@ -23,15 +23,19 @@ if os.path.isfile(client_config_file) == False:
 if os.path.isfile(config_file) == False:
     makeConfig()
 def init_chat_db(db):
-    if os.path.isfile(db):
-        return
     with sqlite3.connect(db) as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS chat (
                         message PRIMARY KEY,
                         cmd TEXT
                      )
                      """)
-        conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
+        
+        cursor = conn.cursor()
+        cursor.execute('SELECT EXISTS (SELECT 1 FROM chat LIMIT 1)')
+        not_empty = cursor.fetchone()[0]
+
+        if not not_empty:
+            conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
                      VALUES ('hello', 'bot_say HELLO {player} {rgb}EFEFEFBREAK')
                      """)
 
@@ -41,13 +45,16 @@ def main_page():
 @app.route("/logout")
 @auth_required
 def logout():
-    return '''<audio controls>
-            <source src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA/+NAwAAAAAAAAAAAAEluZm8AAAAPAAAABwAAA6sAVVVVVVVVVVVVVVVVVVVxcXFxcXFxcXFxcXFxcY6Ojo6Ojo6Ojo6Ojo6Oqqqqqqqqqqqqqqqqqqqqx8fHx8fHx8fHx8fHx8fj4+Pj4+Pj4+Pj4+Pj4///////////////////AAAAAExhdmM1OS4zNwAAAAAAAAAAAAAAACQELQAAAAAAAAOrELM1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/jIMQAE8KWxxVBKABgZYgKMiCiIQfxgXGP/x/IQjH87+hCEIUPgAAAEJOc5yEbznI385znO///+Q5/+c53//Od//53IQgcDgcFGOHA4Q4oMA+///8QAgo5//+TVVn///pJq/6SjYNN/+MixAwXPBLQAYFoAOmFQvUAsAjIwJcMUYwPw439fUl///HmZUvjCmv8Yx/q9ST0UTL/q/+vHcDKO1LV/pAVx8/v5iBQCT//dFQ1D63/zpg7ZkK6v/yNfJ4ylf/OIkBbbvqHUomHf//A/+MgxAsWVAriXchQApAsrtL+k3FTCMQk5ALyZjXVWU8ehTJRV6EQIZx23stX1nuyqinGnV/+v+kA8L047/2//////uFYKUlOv/nf///+n+rBw7//////coFEWepASSW2B1GFi3+pMA7/4yLEDBe0CtJdR2gCMVk3fRjHPVdJNF60lqTTF0oHtP47wmBf/bSmD6DosxytjiLG7/9qX/hWlOv/ZTf/o////UgHQLubrd/9v/1//2Uj/mZfBZDwQUr/////60wt555VWf////7r1gb/4yDECRWMEtABgWgAtemExtTC2Dkbw1N4cI9zdFP//9k3X4xDf+Ocw/TJU13/6v/r/ug3czAzid/+wFon//WMQLmZbf98xEQv/51CrJgnK//yyumRB53/9RjVQgAAggAU8/2X0qv1if/jIsQNF9N2oFGCaADoWlX+ZDiJoXkWX/gM4FKElJI+SP/6nWSRaJ6v//RYxJULcJ8UkTH//81pPMUB7GRs4nv///5YO01JIllGRssxHrzL////90SRKiW1VP7KMiWK1UxBTUUzLjEwMP/jIMQJAAADSAHAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg"></source>
-          </audio><br>''', 401
+    return "LOGGED OUT", 401
 @app.route("/admin")
 @auth_required
 def admin_panel():
-    return render_template("admin_panel.html")
+    auth = request.authorization
+    if auth.username:
+        username = auth.username
+    else:
+        username = "UNKNOWN"
+    return render_template("admin_panel.html", username=username)
 @app.route("/admin/users", methods=['GET', 'POST'])
 @auth_required
 def users():
@@ -68,6 +75,17 @@ def users():
         cursor.execute("SELECT username FROM users")
         rows = cursor.fetchall()
     return render_template("users.html", users=rows)
+@app.route("/admin/users/password", methods=['GET', 'POST'])
+@auth_required
+def change_password_ui():
+    username = request.args.get("user")
+    if not username:
+        return "NO USER", 404
+    if request.method == "POST":
+        password = request.form.get('password')
+        edit_user(username, password)
+        return "<script>window.history.go(-2);</script>"
+    return render_template("change_password.html", username=username)
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
