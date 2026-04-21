@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div class="header"><h1>TOKENS</h1></div>
+    <div class="container">
+        <form method="post">
+            <button type="submit" class="btn-add" name="ADD" value="ADD1">ADD</button>
+        </form>
+
+        <table>
+            <tr><th>Token</th><th></th></tr>
+            {% for token in tokens %}
+            <tr>
+                <td><strong>{{ token['token'] }}</strong></td>
+                <td><a href="/admin/tokens?delete={{ token['token'] }}" class="btn-del" onclick="return confirm('Delete?')">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

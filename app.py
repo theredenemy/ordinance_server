@@ -3,7 +3,7 @@ from flask import request
 from flask import jsonify
 from flask import render_template
 from flask import session
-from auth import auth_required, init_auth_db, edit_user
+from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
 import os
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
@@ -86,6 +86,28 @@ def change_password_ui():
         edit_user(username, password)
         return "<script>window.history.go(-2);</script>"
     return render_template("change_password.html", username=username)
+@app.route("/admin/tokens", methods=['GET', 'POST'])
+@auth_required
+def tokens_ui():
+    delete_button_trigger = request.args.get("delete")
+    if delete_button_trigger:
+        with sqlite3.connect(auth_db) as conn:
+            conn.execute("DELETE FROM tokens WHERE token = ?", (delete_button_trigger,))
+        return '<script>window.location.href="/admin/tokens";</script>'
+    if request.method == "POST":
+        if request.form.get("ADD"):
+            ord_key = gen_ord_key()
+            add_ord_key(ord_key)
+            return '<script>window.location.href="/admin/tokens";</script>'
+        else:
+            return "NO", 403
+    with sqlite3.connect(auth_db) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT token FROM tokens")
+        rows = cursor.fetchall()
+    return render_template("tokens_ui.html", tokens=rows)
+@app.route("/admin/users/password", methods=['GET', 'POST'])
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)

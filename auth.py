@@ -57,11 +57,11 @@ def auth_required(f):
             else:
                 return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
         elif key_header:
-            ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header)).fetchone()
+            ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
             if ord_key:
                return f(*args, **kwargs)
             else:
-               return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})  
+               return make_response("<h1>INVALID KEY</h1>", 401)  
         else:
             return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
     return logon
