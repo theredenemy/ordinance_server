@@ -3,6 +3,7 @@ from flask import request
 from flask import jsonify
 from flask import render_template
 from flask import session
+from werkzeug.middleware.proxy_fix import ProxyFix
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
 import os
 from makeConfig import makeConfig
@@ -18,6 +19,7 @@ chat_db = "chat.db"
 auth_db = "auth.db"
 inputs = []
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
 if os.path.isfile(client_config_file) == False:
     makeClientConfig()
 if os.path.isfile(config_file) == False:
@@ -38,7 +40,8 @@ def init_chat_db(db):
             conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
                      VALUES ('hello', 'bot_say HELLO {player} {rgb}EFEFEFBREAK')
                      """)
-
+init_chat_db(chat_db)
+init_auth_db(auth_db)
 @app.route("/")
 def main_page():
     return "<p>ORDINANCE</p>"
@@ -281,8 +284,7 @@ def ord_render():
 
     return jsonify({'message': "RENDER"}), 200
 if __name__ == '__main__':
-    init_chat_db(chat_db)
-    init_auth_db(auth_db)
+    
     
     app.run(host="0.0.0.0", port=5000)
 
