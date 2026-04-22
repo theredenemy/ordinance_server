@@ -5,6 +5,7 @@ from flask import render_template
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
+import auth as au
 import os
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
@@ -48,19 +49,29 @@ def main_page():
 @app.route("/logout")
 @auth_required
 def logout():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     return "LOGGED OUT", 401
 @app.route("/admin")
 @auth_required
 def admin_panel():
+    
     auth = request.authorization
-    if auth.username:
-        username = auth.username
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
+    if auth:
+        if auth.username:
+            username = auth.username
+        else:
+            username = "UNKNOWN"
     else:
         username = "UNKNOWN"
     return render_template("admin_panel.html", username=username)
 @app.route("/admin/users", methods=['GET', 'POST'])
 @auth_required
 def users():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     delete_button_trigger = request.args.get("delete")
     if delete_button_trigger:
         with sqlite3.connect(auth_db) as conn:
@@ -81,6 +92,8 @@ def users():
 @app.route("/admin/users/password", methods=['GET', 'POST'])
 @auth_required
 def change_password_ui():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     username = request.args.get("user")
     if not username:
         return "NO USER", 404
@@ -92,6 +105,8 @@ def change_password_ui():
 @app.route("/admin/tokens", methods=['GET', 'POST'])
 @auth_required
 def tokens_ui():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     delete_button_trigger = request.args.get("delete")
     if delete_button_trigger:
         with sqlite3.connect(auth_db) as conn:
@@ -133,6 +148,8 @@ def set_mode():
 @app.route("/ord/chat/admin", methods=['GET', 'POST'])
 @auth_required
 def admin_chat_ui():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     delete_button_trigger = request.args.get("delete")
     if delete_button_trigger:
         with sqlite3.connect(chat_db) as conn:

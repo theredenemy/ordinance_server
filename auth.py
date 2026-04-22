@@ -7,6 +7,7 @@ import sqlite3
 import os
 import secrets
 db_file = None 
+use_token = False
 def get_db():
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
@@ -45,8 +46,10 @@ def gen_ord_key():
 
 
 def auth_required(f):
+    global use_token
     @wraps(f)
     def logon(*args, **kwargs):
+        global use_token
         auth = request.authorization
         db = get_db()
         if current_app.debug:
@@ -55,12 +58,14 @@ def auth_required(f):
         if auth and auth.username:
             user = db.execute('SELECT * FROM users WHERE username = ?', (auth.username,)).fetchone()
             if user and check_password_hash(user['password'], auth.password):
+                use_token = False
                 return f(*args, **kwargs)
             else:
                 return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
         elif key_header:
             ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
             if ord_key:
+               use_token = True
                return f(*args, **kwargs)
             else:
                return make_response("<h1>INVALID KEY</h1>", 401)  
