@@ -16,6 +16,7 @@ import socket
 import sqlite3
 import re
 config_file = "ORDINANCE.ini"
+motd_file = "motd.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
@@ -46,7 +47,15 @@ init_chat_db(chat_db)
 init_auth_db(auth_db)
 @app.route("/")
 def main_page():
-    return "<p>ORDINANCE</p>"
+    if not os.path.isfile(motd_file):
+        with open(motd_file, 'w', encoding="utf-8", errors='ignore') as f:
+            f.write("ORDINANCE")
+            f.close()
+    with open(motd_file, 'r', encoding="utf-8", errors='ignore') as f:
+        motd = f.read()
+        f.close()
+
+    return f"<p>{motd}</p>"
 @app.route("/logout")
 @auth_required
 def logout():
@@ -108,6 +117,8 @@ def change_password_ui():
 def tokens_ui():
     if au.use_token:
         return "FUCK YOU BREAK", 403
+    if au.check_users_if_empty():
+        return "NO USERS ADDED PLEASE ADD A USER", 403
     delete_button_trigger = request.args.get("delete")
     if delete_button_trigger:
         with sqlite3.connect(auth_db) as conn:

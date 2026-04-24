@@ -12,6 +12,15 @@ def get_db():
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
     return conn
+def check_users_if_empty():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT EXISTS (SELECT 1 FROM users LIMIT 1)')
+    not_empty = cursor.fetchone()[0]
+    if not not_empty:
+        return True
+    else:
+        return False
 def init_auth_db(db):
     global db_file
     db_file = db
@@ -22,14 +31,14 @@ def init_auth_db(db):
                      )
                      """)
         conn.execute("CREATE TABLE IF NOT EXISTS tokens (token TEXT PRIMARY KEY)")
-        cursor = conn.cursor()
-        cursor.execute('SELECT EXISTS (SELECT 1 FROM users LIMIT 1)')
-        not_empty = cursor.fetchone()[0]
+        # cursor = conn.cursor()
+        # cursor.execute('SELECT EXISTS (SELECT 1 FROM users LIMIT 1)')
+        # not_empty = cursor.fetchone()[0]
 
-        if not not_empty:
-            user = input("ENTER USERNAME : ")
-            password = input("ENTER PASSWORD : ")
-            edit_user(user, password)
+        # if not not_empty:
+        #     user = input("ENTER USERNAME : ")
+        #     password = input("ENTER PASSWORD : ")
+        #     edit_user(user, password)
 
 
 def edit_user(username, password):
@@ -53,6 +62,8 @@ def auth_required(f):
         auth = request.authorization
         db = get_db()
         if current_app.debug:
+            return f(*args, **kwargs)
+        if check_users_if_empty():
             return f(*args, **kwargs)
         key_header = request.headers.get('X-ORD-KEY')
         if auth and auth.username:

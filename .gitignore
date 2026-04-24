@@ -9,3 +9,4 @@ inputs.txt
 *.db
 apptest1.py
 Client.ini
+motd.txt
