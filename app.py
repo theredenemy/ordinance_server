@@ -175,7 +175,7 @@ def chat_send():
     json_data = request.json
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
-    message = str(json_data['message'])
+    message = str(json_data['message']).lower()
     print(player, steamid, message)
     cmd = ""
     valid = False
@@ -189,7 +189,7 @@ def chat_send():
             valid = True
             cmd = command
             break
-        if re.search(message, trigger):
+        if re.search(trigger, message):
             valid = True
             cmd = command
             break
