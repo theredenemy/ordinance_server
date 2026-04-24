@@ -14,6 +14,7 @@ import time
 import client
 import socket
 import sqlite3
+import re
 config_file = "ORDINANCE.ini"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
@@ -185,6 +186,10 @@ def chat_send():
         rows = cursor.fetchall()
     for trigger, command in rows:
         if message == trigger:
+            valid = True
+            cmd = command
+            break
+        if re.search(message, trigger):
             valid = True
             cmd = command
             break
