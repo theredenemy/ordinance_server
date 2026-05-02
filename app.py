@@ -191,6 +191,7 @@ def chat_send():
     cmd = ""
     valid = False
     time.sleep(1)
+
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT message, cmd FROM chat")
@@ -200,13 +201,14 @@ def chat_send():
             valid = True
             cmd = command
             break
-        if re.search(trigger, message):
+        if re.sub(r'[^a-zA-Z0-9 ]', '', message) == trigger:
             valid = True
             cmd = command
             break
         if trigger in message.split():
             valid = True
             cmd = command
+            break
     if valid:
         cmd = cmd.replace("{player}", player)
         cmd = cmd.replace("{steamid}", steamid)
