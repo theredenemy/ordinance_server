@@ -154,9 +154,13 @@ def show_info():
 @auth_required
 def set_mode():
     json_data = request.json
-    mode = str(json_data['mode'])
-    configHelper.set_config(config_file, "ORDINANCE", "mode", mode)
-    return jsonify({'message': 'done'}), 200
+    allow_mode_change = configHelper.read_config(config_file, "ORDINANCE", "allow_mode_change", is_bool=True, default_value=True)
+    if allow_mode_change:
+        mode = str(json_data['mode'])
+        configHelper.set_config(config_file, "ORDINANCE", "mode", mode)
+        return jsonify({'message': 'done'}), 200
+    else:
+        return jsonify({'message': 'nope'}), 403
 @app.route("/ord/chat/admin", methods=['GET', 'POST'])
 @auth_required
 def admin_chat_ui():
