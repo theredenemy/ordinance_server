@@ -141,6 +141,8 @@ def tokens_ui():
 @auth_required
 def set_inputs():
     global inputs
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
     if request.method == 'POST':
         inputs = request.form.get("inputs").upper().split()
         return '<script>window.location.href="/admin/set/inputs";</script>'
