@@ -137,6 +137,14 @@ def tokens_ui():
         cursor.execute("SELECT token FROM tokens")
         rows = cursor.fetchall()
     return render_template("tokens_ui.html", tokens=rows)
+@app.route("/admin/set/inputs", methods=['GET', 'POST'])
+@auth_required
+def set_inputs():
+    global inputs
+    if request.method == 'POST':
+        inputs = request.form.get("inputs").upper().split()
+        return '<script>window.location.href="/admin/set/inputs";</script>'
+    return render_template("inputs.html", inputs=' '.join(inputs))
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
