@@ -74,6 +74,7 @@ def check_ip():
             return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
 @app.errorhandler(404)
 def error_404(e):
+    global ip_list
     # STOP TRYING BREAK
     ip = request.remote_addr
     ip_list.append(ip)
