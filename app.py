@@ -29,6 +29,7 @@ temp_ban_list = []
 inputs = []
 app = Flask(__name__)
 scheduler = APScheduler()
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
 if os.path.isfile(client_config_file) == False:
     makeClientConfig()
@@ -67,6 +68,7 @@ def clear_temp_bans():
     if len(temp_ban_list) < 1:
         print("CLEARED TEMP BANS")
         temp_ban_list = []
+scheduler.start()
 @app.before_request
 def check_ip():
     ip = request.remote_addr
