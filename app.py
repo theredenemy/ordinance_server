@@ -2,6 +2,7 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from flask import render_template
+from flask import redirect
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
@@ -45,6 +46,10 @@ def init_chat_db(db):
                      """)
 init_chat_db(chat_db)
 init_auth_db(auth_db)
+@app.errorhandler(404)
+def war_without_reason(e):
+    # STOP TRYING BREAK
+    return '<script>window.location.href="https://www.youtube.com/watch?v=Elj4zDLqJvw";</script>'
 @app.route("/")
 def main_page():
     if not os.path.isfile(motd_file):
