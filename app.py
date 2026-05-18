@@ -50,7 +50,7 @@ init_auth_db(auth_db)
 def war_without_reason(e):
     # STOP TRYING BREAK
     # this song is a banger
-    return '<script>window.location.href="https://www.youtube.com/watch?v=Elj4zDLqJvw";</script>', 404
+    return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
 @app.route("/")
 def main_page():
     if not os.path.isfile(motd_file):
