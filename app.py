@@ -88,6 +88,7 @@ def check_ip():
     if ip in banlist and not use_token or ip in temp_ban_list and not use_token:
         print("IP IS BANNED")
         # this song is a banger
+        # WAR WITHOUT REASON
         return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
 @app.errorhandler(404)
 def error_404(e):
