@@ -3,6 +3,7 @@ from flask import request
 from flask import jsonify
 from flask import render_template
 from flask import redirect
+from flask import send_file
 from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -103,6 +104,9 @@ def main_page():
         f.close()
 
     return f"<p>{motd}</p>"
+@app.route("/favicon.ico")
+def download_icon():
+    return send_file("favicon.ico")
 @app.route("/logout")
 @auth_required
 def logout():
