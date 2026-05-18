@@ -3,6 +3,7 @@ from flask import request
 from flask import jsonify
 from flask import render_template
 from flask import redirect
+from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
@@ -16,13 +17,17 @@ import client
 import socket
 import sqlite3
 import re
+from collections import Counter
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
+ip_bans_file = "ipbans.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
+ip_list = []
 inputs = []
 app = Flask(__name__)
+scheduler = APScheduler()
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
 if os.path.isfile(client_config_file) == False:
     makeClientConfig()
@@ -44,13 +49,39 @@ def init_chat_db(db):
             conn.execute("""INSERT OR IGNORE INTO chat (message, cmd)
                      VALUES ('hello', 'bot_say HELLO {player} {rgb}EFEFEFBREAK')
                      """)
+def ban(ip):
+    with open(ip_bans_file, 'w', encoding="utf-8", errors='ignore') as f:
+        f.write(f"{ip}\n")
+        f.close()
+    return
 init_chat_db(chat_db)
 init_auth_db(auth_db)
+@scheduler.task("cron", id='clear_ip_list', minute='*')
+def clear_ip_list():
+    global ip_list
+    ip_list = []
+@app.before_request
+def check_ip():
+    ip = request.remote_addr
+    if os.path.isfile(ip_bans_file):
+        file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
+        banlist = []
+        for ip_ban in file.readlines():
+            banlist.append(ip_ban.strip())
+        if ip in banlist:
+            print("IP IS BANNED")
+            # this song is a banger
+            return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
 @app.errorhandler(404)
-def war_without_reason(e):
+def error_404(e):
     # STOP TRYING BREAK
-    # this song is a banger
-    return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
+    ip = request.remote_addr
+    ip_list.append(ip)
+    counts = Counter(ip_list)
+    if counts[ip] >= 10:
+        ban(ip)
+        return "BYEBYE", 404
+    return "404 Not Found", 404
 @app.route("/")
 def main_page():
     if not os.path.isfile(motd_file):
