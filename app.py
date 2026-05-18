@@ -65,7 +65,7 @@ def clear_ip_list():
 @scheduler.task("cron", id='clear_temp_bans', minute='*/5')
 def clear_temp_bans():
     global temp_ban_list
-    if len(temp_ban_list) < 1:
+    if len(temp_ban_list) > 0:
         print("CLEARED TEMP BANS")
         temp_ban_list = []
 scheduler.start()
