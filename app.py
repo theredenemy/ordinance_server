@@ -49,6 +49,7 @@ init_auth_db(auth_db)
 @app.errorhandler(404)
 def war_without_reason(e):
     # STOP TRYING BREAK
+    # this song is a banger
     return '<script>window.location.href="https://www.youtube.com/watch?v=Elj4zDLqJvw";</script>', 404
 @app.route("/")
 def main_page():
