@@ -7,7 +7,7 @@ from flask import send_file
 from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
-from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key
+from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
 import auth as au
 import os
 from makeConfig import makeConfig
@@ -73,15 +73,22 @@ scheduler.start()
 @app.before_request
 def check_ip():
     ip = request.remote_addr
+    banlist = []
+    db = get_db()
+    use_token = False
     if os.path.isfile(ip_bans_file):
         file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
-        banlist = []
         for ip_ban in file.readlines():
             banlist.append(ip_ban.strip())
-        if ip in banlist or ip in temp_ban_list:
-            print("IP IS BANNED")
-            # this song is a banger
-            return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
+    key_header = request.headers.get('X-ORD-KEY')
+    if key_header:
+        ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
+        if ord_key:
+            use_token = True
+    if ip in banlist and not use_token or ip in temp_ban_list and not use_token:
+        print("IP IS BANNED")
+        # this song is a banger
+        return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
 @app.errorhandler(404)
 def error_404(e):
     global ip_list
