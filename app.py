@@ -25,6 +25,7 @@ client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
 ip_list = []
+temp_ban_list = []
 inputs = []
 app = Flask(__name__)
 scheduler = APScheduler()
@@ -60,6 +61,12 @@ init_auth_db(auth_db)
 def clear_ip_list():
     global ip_list
     ip_list = []
+@scheduler.task("cron", id='clear_temp_bans', minute='*/5')
+def clear_temp_bans():
+    global temp_ban_list
+    if len(temp_ban_list) < 1:
+        print("CLEARED TEMP BANS")
+        temp_ban_list = []
 @app.before_request
 def check_ip():
     ip = request.remote_addr
@@ -68,7 +75,7 @@ def check_ip():
         banlist = []
         for ip_ban in file.readlines():
             banlist.append(ip_ban.strip())
-        if ip in banlist:
+        if ip in banlist or ip in temp_ban_list:
             print("IP IS BANNED")
             # this song is a banger
             return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
@@ -80,7 +87,7 @@ def error_404(e):
     ip_list.append(ip)
     counts = Counter(ip_list)
     if counts[ip] >= 10:
-        ban(ip)
+        temp_ban_list.append(ip)
         return "BYEBYE", 404
     return "404 Not Found", 404
 @app.route("/")
