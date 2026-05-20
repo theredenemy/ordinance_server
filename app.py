@@ -76,6 +76,14 @@ def check_ip():
     banlist = []
     db = get_db()
     use_token = False
+    if request.method == "POST":
+        if request.is_json:
+            post_data = request.get_json()
+        else:
+            post_data = request.form.to_dict()
+        with open("post_data_logs.txt", 'a', encoding="utf-8", errors='ignore') as f:
+            f.write(f"{request.remote_addr} : {post_data}\n")
+            f.close()
     if os.path.isfile(ip_bans_file):
         file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
         for ip_ban in file.readlines():
@@ -101,6 +109,17 @@ def error_404(e):
         temp_ban_list.append(ip)
         return "BYEBYE", 404
     return "404 Not Found", 404
+@app.errorhandler(405)
+def error_405(e):
+    global ip_list
+    # STOP TRYING BREAK
+    ip = request.remote_addr
+    ip_list.append(ip)
+    counts = Counter(ip_list)
+    if counts[ip] >= 10:
+        temp_ban_list.append(ip)
+        return "BYEBYE", 405
+    return "JUST STOP BREAK", 405
 @app.route("/")
 def main_page():
     if not os.path.isfile(motd_file):
