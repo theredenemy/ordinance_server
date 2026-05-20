@@ -25,6 +25,7 @@ ip_bans_file = "ipbans.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
+log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 ip_list = []
 temp_ban_list = []
 inputs = []
@@ -76,7 +77,8 @@ def check_ip():
     banlist = []
     db = get_db()
     use_token = False
-    if request.method == "POST":
+    log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
+    if request.method == "POST" and log_post_requests:
         if request.is_json:
             post_data = request.get_json()
         else:
