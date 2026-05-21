@@ -18,6 +18,7 @@ import client
 import socket
 import sqlite3
 import re
+import time
 from collections import Counter
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
@@ -26,6 +27,7 @@ client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
+log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
 ip_list = []
 temp_ban_list = []
 inputs = []
@@ -281,7 +283,13 @@ def chat_send():
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
     message = str(json_data['message']).lower()
+    log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
+    
     print(player, steamid, message)
+    if log_chat:
+        with open("chat_logs.txt", 'a', encoding="utf-8", errors='ignore') as f:
+            f.write(f"{time.strftime("%Y-%m-%d-%H:%M:%S", time.time())} : {player} {steamid} >> {message}\n")
+            f.close()
     cmd = ""
     valid = False
     time.sleep(1)

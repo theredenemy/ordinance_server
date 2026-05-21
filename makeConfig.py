@@ -19,6 +19,9 @@ def makeConfig():
    config_file.set("ORDINANCE", "weapon", "UNKNOWN")
    config_file.set("ORDINANCE", "playerclass", "UNKNOWN")
    config_file.set("ORDINANCE", "mode", "game")
+   config_file.set("ORDINANCE", "allow_mode_change", "True")
+   config_file.set("ORDINANCE", "log_post_requests", "False")
+   config_file.set("ORDINANCE", "log_chat", "False")
 
 
    with open(r"ORDINANCE.ini", 'w') as configfileObj:
