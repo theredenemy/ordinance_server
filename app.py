@@ -288,7 +288,9 @@ def chat_send():
     print(player, steamid, message)
     if log_chat:
         with open("chat_logs.txt", 'a', encoding="utf-8", errors='ignore') as f:
-            f.write(f"{time.strftime("%Y-%m-%d-%H:%M:%S", time.time())} : {player} {steamid} >> {message}\n")
+            ti_c = time.ctime(time.time())
+            time_c = time.strptime(ti_c)
+            f.write(f"{time.strftime("%Y-%m-%d-%H:%M:%S", time_c)} : {player} {steamid} >> {message}\n")
             f.close()
     cmd = ""
     valid = False
