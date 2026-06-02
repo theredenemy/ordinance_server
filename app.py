@@ -4,6 +4,7 @@ from flask import jsonify
 from flask import render_template
 from flask import redirect
 from flask import send_file
+from flask import abort
 from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -111,7 +112,7 @@ def error_404(e):
     counts = Counter(ip_list)
     if counts[ip] >= 10:
         temp_ban_list.append(ip)
-        return "BYEBYE", 404
+        return "BYEBYE", 200
     return "404 Not Found", 404
 @app.errorhandler(405)
 def error_405(e):
@@ -122,7 +123,7 @@ def error_405(e):
     counts = Counter(ip_list)
     if counts[ip] >= 10:
         temp_ban_list.append(ip)
-        return "BYEBYE", 405
+        return "BYEBYE", 200
     return "JUST STOP BREAK", 405
 @app.route("/")
 def main_page():
@@ -137,7 +138,10 @@ def main_page():
     return f"<p>{motd}</p>"
 @app.route("/favicon.ico")
 def download_icon():
-    return send_file("favicon.ico")
+    if os.path.isfile("favicon.ico"):
+        return send_file("favicon.ico")
+    else:
+        abort(404)
 @app.route("/logout")
 @auth_required
 def logout():
@@ -188,7 +192,7 @@ def change_password_ui():
         return "FUCK YOU BREAK", 403
     username = request.args.get("user")
     if not username:
-        return "NO USER", 404
+        return "NO USER", 403
     if request.method == "POST":
         password = request.form.get('password')
         edit_user(username, password)
