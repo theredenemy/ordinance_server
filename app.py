@@ -148,7 +148,7 @@ def getdata():
     json_data = request.json
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
-    print(f"{player}:{steamid} Has Joined")
+    print(f"{player}:{steamid} Has Been Put in Server")
     return jsonify({'message': "RENDER"}), 200
 
 @app.route("/logout")
