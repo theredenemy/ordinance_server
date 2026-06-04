@@ -142,6 +142,15 @@ def download_icon():
         return send_file("favicon.ico")
     else:
         abort(404)
+@app.route("/getdata", methods=['POST'])
+@auth_required
+def getdata():
+    json_data = request.json
+    player = str(json_data['player'])
+    steamid = str(json_data['steamid'])
+    print(f"{player}:{steamid} Has Joined")
+    return jsonify({'message': "RENDER"}), 200
+
 @app.route("/logout")
 @auth_required
 def logout():
