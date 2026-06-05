@@ -84,6 +84,7 @@ def check_ip():
     db = get_db()
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
+    block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
     data = json.loads(ipinfo.text)
     vpn = bool(data.get("proxy"))
