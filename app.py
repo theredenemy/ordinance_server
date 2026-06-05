@@ -132,16 +132,7 @@ def error_405(e):
         temp_ban_list.append(ip)
         return "BYEBYE", 200
     return "JUST STOP BREAK", 405
-@app.errorhandler(401)
-def error_401():
-    global ip_list
-    # STOP TRYING BREAK
-    ip = request.remote_addr
-    ip_list.append(ip)
-    counts = Counter(ip_list)
-    if counts[ip] >= 30:
-        temp_ban_list.append(ip)
-        return "BYEBYE", 200
+
 @app.route("/")
 def main_page():
     if not os.path.isfile(motd_file):
