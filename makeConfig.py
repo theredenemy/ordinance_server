@@ -22,6 +22,7 @@ def makeConfig():
    config_file.set("ORDINANCE", "allow_mode_change", "True")
    config_file.set("ORDINANCE", "log_post_requests", "False")
    config_file.set("ORDINANCE", "log_chat", "False")
+   config_file.set("ORDINANCE", "block_vpn", "False")
 
 
    with open(r"ORDINANCE.ini", 'w') as configfileObj:

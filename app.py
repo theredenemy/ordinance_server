@@ -20,6 +20,8 @@ import socket
 import sqlite3
 import re
 import time
+import requests
+import json
 from collections import Counter
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
@@ -29,6 +31,7 @@ chat_db = "chat.db"
 auth_db = "auth.db"
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
+block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
 ip_list = []
 temp_ban_list = []
 inputs = []
@@ -81,6 +84,9 @@ def check_ip():
     db = get_db()
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
+    ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
+    data = json.loads(ipinfo.text)
+    vpn = bool(data.get("proxy"))
     if request.method == "POST" and log_post_requests:
         if request.is_json:
             post_data = request.get_json()
@@ -98,7 +104,7 @@ def check_ip():
         ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
         if ord_key:
             use_token = True
-    if ip in banlist and not use_token or ip in temp_ban_list and not use_token:
+    if ip in banlist and not use_token or ip in temp_ban_list and not use_token or vpn and not use_token and block_vpn:
         print("IP IS BANNED")
         # this song is a banger
         # WAR WITHOUT REASON
