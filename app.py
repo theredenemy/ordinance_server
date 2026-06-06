@@ -315,7 +315,7 @@ def chat_send():
             f.close()
     cmd = ""
     valid = False
-    time.sleep(1)
+    #time.sleep(1)
 
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
