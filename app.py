@@ -242,14 +242,30 @@ def tokens_ui():
     return render_template("tokens_ui.html", tokens=rows)
 @app.route("/admin/set/inputs", methods=['GET', 'POST'])
 @auth_required
-def set_inputs():
+def redirect_to_ordinance_ui():
+    return redirect("/admin/ordinance_ui")
+@app.route("/admin/ordinance_ui", methods=['GET', 'POST'])
+@auth_required
+def ordinance_ui():
     global inputs
+    mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
+    state = configHelper.read_config(config_file, "ORDINANCE", "state")
     if au.use_token:
         return "FUCK YOU BREAK", 403
     if request.method == 'POST':
-        inputs = request.form.get("inputs").upper().split()
-        return '<script>window.location.href="/admin/set/inputs";</script>'
-    return render_template("inputs.html", inputs=' '.join(inputs))
+        if request.form.get("submit-btn"):
+            inputs = request.form.get("inputs").upper().split()
+            return '<script>window.location.href="/admin/ordinance_ui";</script>'
+        elif request.form.get("submit-btn2"):
+            configHelper.set_config(config_file, "ORDINANCE", "mode", request.form.get("mode"))
+            return '<script>window.location.href="/admin/ordinance_ui";</script>'
+        elif request.form.get("submit-btn3"):
+            configHelper.set_config(config_file, "ORDINANCE", "state", request.form.get("state"))
+            return '<script>window.location.href="/admin/ordinance_ui";</script>'
+        else:
+            return "BREAK"
+        
+    return render_template("ordinance_ui.html", inputs=' '.join(inputs), mode=mode, state=state)
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
