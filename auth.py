@@ -70,6 +70,7 @@ def auth_required(f):
             user = db.execute('SELECT * FROM users WHERE username = ?', (auth.username,)).fetchone()
             if user and check_password_hash(user['password'], auth.password):
                 use_token = False
+                print(f"User Login : {auth.username}")
                 return f(*args, **kwargs)
             else:
                 return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="PLEASE LOGIN TO ORDINANCE BREAK"'})
