@@ -101,6 +101,9 @@ def check_ip():
         for ip_ban in file.readlines():
             banlist.append(ip_ban.strip())
     key_header = request.headers.get('X-ORD-KEY')
+    is_coffee = request.headers.get("X-COFFEE")
+    if is_coffee:
+        abort(418)
     if key_header:
         ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
         if ord_key:
@@ -144,8 +147,8 @@ def main_page():
         f.close()
 
     return f"<p>{motd}</p>"
-@app.route("/teapot")
-def teapot():
+@app.route("/coffee")
+def coffee():
     abort(418)
 @app.route("/favicon.ico")
 def download_icon():
