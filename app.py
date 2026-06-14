@@ -144,6 +144,9 @@ def main_page():
         f.close()
 
     return f"<p>{motd}</p>"
+@app.route("/teapot")
+def teapot():
+    abort(418)
 @app.route("/favicon.ico")
 def download_icon():
     if os.path.isfile("favicon.ico"):
