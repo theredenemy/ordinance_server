@@ -87,7 +87,7 @@ def console():
                         print(f"User {user} Has Been Deleted...")
         except Exception as e:
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
-                print("shutdown")
+                print("shutdown\n")
                 break
 
             
