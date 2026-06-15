@@ -11,6 +11,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
 import auth as au
 import os
+import threading
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
 import configHelper
@@ -64,6 +65,28 @@ def ban(ip):
         f.write(f"{ip}\n")
         f.close()
     return
+def console():
+    while True:
+        try:
+            cmd = input()
+            if cmd == "edit_user".lower():
+                user = input("ENTER USERNAME : ")
+                password = input("ENTER PASSWORD : ")
+                edit_user(user, password)
+            if cmd == "del_user".lower():
+                user = input("ENTER USERNAME : ")
+                if user:
+                    are_you_sure = input(f"This will delete the user {user} Are you sure you want to do this? (y/n)")
+                    if are_you_sure == "y".lower():
+                        with sqlite3.connect(auth_db) as conn:
+                            conn.execute("DELETE FROM users WHERE username = ?", (user,))
+                        print(f"User {user} Has Been Deleted...")
+        except Exception as e:
+            if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
+                print("shutdown")
+                break
+
+            
 init_chat_db(chat_db)
 init_auth_db(auth_db)
 @scheduler.task("cron", id='clear_ip_list', minute='*')
@@ -468,5 +491,7 @@ def ord_render():
 if __name__ == '__main__':
     
     port = int(os.environ.get("SERVER_PORT", 5000))
+    console_thread = threading.Thread(target=console, daemon=True)
+    console_thread.start()
     app.run(host="0.0.0.0", port=port)
 
