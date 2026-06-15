@@ -70,16 +70,16 @@ def console():
         try:
             cmd = input()
             if cmd == "edit_user".lower():
-                print("ENTER USERNAME : ")
+                print("ENTER USERNAME\n")
                 user = input()
-                print("ENTER PASSWORD : ")
+                print("ENTER PASSWORD\n")
                 password = input()
                 edit_user(user, password)
             if cmd == "del_user".lower():
-                print("ENTER USERNAME : ")
+                print("ENTER USERNAME\n")
                 user = input()
                 if user:
-                    print(f"This will delete the user {user} Are you sure you want to do this? (y/n)")
+                    print(f"This will delete the user {user} Are you sure you want to do this? (y/n)\n")
                     are_you_sure = input()
                     if are_you_sure == "y".lower():
                         with sqlite3.connect(auth_db) as conn:
