@@ -88,7 +88,7 @@ def console():
                             conn.execute("DELETE FROM users WHERE username = ?", (user,))
                         print(f"User {user} Has Been Deleted...")
             if cmd == "players".lower():
-                for steamid, player in players.keys():
+                for steamid, player in players.items():
                     print(steamid, player)
         except Exception as e:
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
