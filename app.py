@@ -36,6 +36,7 @@ block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_b
 ip_list = []
 temp_ban_list = []
 inputs = []
+players = {}
 app = Flask(__name__)
 scheduler = APScheduler()
 
@@ -186,10 +187,12 @@ def download_icon():
 @app.route("/getdata", methods=['POST'])
 @auth_required
 def getdata():
+    global players
     json_data = request.json
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
     print(f"{player}:{steamid} Has Been Put in Server")
+    players[steamid] = player
     return jsonify({'message': "RENDER"}), 200
 
 @app.route("/logout")
@@ -349,6 +352,7 @@ def admin_chat_ui():
 @app.route("/ord/chat/send", methods=['POST'])
 @auth_required
 def chat_send():
+    global players
     json_data = request.json
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
@@ -385,6 +389,8 @@ def chat_send():
             break
     if valid:
         cmd = cmd.replace("{player}", player)
+        if players[steamid]:
+            cmd = cmd.replace("{o_name}", players[steamid])
         cmd = cmd.replace("{steamid}", steamid)
         cmd = cmd.replace("{rgb}", "\x07")
         cmd = cmd.replace("{default}", "\x01")
