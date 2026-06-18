@@ -69,6 +69,7 @@ def ban(ip):
 def console():
     while True:
         try:
+            global players
             cmd = input()
             if cmd == "edit_user".lower():
                 print("ENTER USERNAME\n")
@@ -86,6 +87,9 @@ def console():
                         with sqlite3.connect(auth_db) as conn:
                             conn.execute("DELETE FROM users WHERE username = ?", (user,))
                         print(f"User {user} Has Been Deleted...")
+            if cmd == "players".lower():
+                for steamid, player in players.keys():
+                    print(steamid, player)
         except Exception as e:
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
                 print("shutdown\n")
