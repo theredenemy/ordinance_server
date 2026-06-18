@@ -389,8 +389,10 @@ def chat_send():
             break
     if valid:
         cmd = cmd.replace("{player}", player)
-        if players[steamid]:
+        if steamid in players.keys():
             cmd = cmd.replace("{o_name}", players[steamid])
+        else:
+            cmd = cmd.replace("{o_name}", "UNKNOWN")
         cmd = cmd.replace("{steamid}", steamid)
         cmd = cmd.replace("{rgb}", "\x07")
         cmd = cmd.replace("{default}", "\x01")
