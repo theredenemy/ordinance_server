@@ -117,9 +117,13 @@ def check_ip():
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
-    ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
-    data = json.loads(ipinfo.text)
-    vpn = bool(data.get("proxy"))
+    try:
+        ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
+        data = json.loads(ipinfo.text)
+        vpn = bool(data.get("proxy"))
+    except Exception as e:
+        print(type(e))
+        vpn = False
     if request.method == "POST" and log_post_requests:
         if request.is_json:
             post_data = request.get_json()
