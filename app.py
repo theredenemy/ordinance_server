@@ -464,7 +464,10 @@ def ord_input():
     inputs.append(str(input))
     print(inputs)
     return jsonify({'message': inputs}), 200
-
+@app.route("/ord/play", methods=['POST'])
+@auth_required
+def ord_play():
+    return 'PLACEHOLDER'
 @app.route("/ord/input/render",  methods=['GET'])
 @auth_required
 def ord_render():
