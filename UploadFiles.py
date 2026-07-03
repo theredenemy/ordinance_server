@@ -9,7 +9,7 @@ def upload_dir(dir, remotepath, host, port, user, ssh_keyfile):
 
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print("Connecting")
-    ssh_client.connect(hostname=host, port=port, username=user, allow_agent=True, key_filename=ssh_keyfile)
+    ssh_client.connect(hostname=host, port=port, username=user, allow_agent=True, key_filename=ssh_keyfile, disabled_algorithms={'pubkeys': ['ssh-rsa']})
     print("Connected")
     sftp = ssh_client.open_sftp()
     print("Uploading Files")
@@ -36,7 +36,7 @@ def upload_file(filepath, remotepath, host, port, user, ssh_keyfile):
 
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print("Connecting")
-    ssh_client.connect(hostname=host, port=port, username=user, allow_agent=True, key_filename=ssh_keyfile)
+    ssh_client.connect(hostname=host, port=port, username=user, allow_agent=True, key_filename=ssh_keyfile, disabled_algorithms={'pubkeys': ['ssh-rsa']})
     print("Connected")
     sftp = ssh_client.open_sftp()
     print("Uploading File")
