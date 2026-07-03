@@ -4,6 +4,7 @@
 /ORDINANCE.ini
 /ord_play
 /view
+/ssh_key
 /__pycache__
 make_venv.bat
 checksums.ini

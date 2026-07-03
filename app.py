@@ -25,6 +25,8 @@ import re
 import time
 import requests
 import json
+import paramiko
+import UploadFiles
 from collections import Counter
 
 import wave
@@ -44,6 +46,10 @@ auth_db = "auth.db"
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
+host = configHelper.read_config(config_file, "sftp", "host", default_value="127.0.0.1")
+port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
+user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky")
+ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value=os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
 ip_list = []
 temp_ban_list = []
 inputs = []
@@ -60,6 +66,18 @@ if os.path.isfile(client_config_file) == False:
     makeClientConfig()
 if os.path.isfile(config_file) == False:
     makeConfig()
+def gen_ssh_key():
+    if not os.path.isdir(os.path.join(os.getcwd(), "ssh_key")):
+        os.makedirs(os.path.join(os.getcwd(), "ssh_key"))
+    
+    rsa_key = paramiko.RSAKey.generate(bits=4096)
+
+    rsa_key.write_private_key_file(os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
+
+    public_key = f"{rsa_key.get_name()} {rsa_key.get_base64()}"
+    with open(os.path.join(os.getcwd(), "ssh_key", "id_rsa.pub"), 'w') as f:
+        f.write(public_key)
+
 def init_chat_db(db):
     with sqlite3.connect(db) as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS chat (
@@ -105,6 +123,8 @@ def console():
             if cmd == "players".lower():
                 for steamid, player in players.items():
                     print(steamid, player)
+            if cmd == "gen_ssh_key".lower():
+                gen_ssh_key()
         except Exception as e:
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
                 print("shutdown\n")
@@ -187,6 +207,11 @@ def render_play():
             video.close()
             os.remove(path)
             vid2vtf.video_to_vtf(video=os.path.join(view_dir, "view.mp4"), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
+            materials_dir = os.path.join(view_dir, "materials")
+            sound_dir = os.path.join(view_dir, "sound")
+            UploadFiles.upload_dir(materials_dir, "/tf/materials", host, port, user, ssh_keyfile)
+            UploadFiles.upload_dir(sound_dir, "/tf/sound", host, port, user, ssh_keyfile)
+            UploadFiles.upload_file(os.path.join(view_dir, "view.mp4"), "/tf/public", host, port, user, ssh_keyfile)
             break
         except Exception as e:
             os.remove(path)
@@ -195,6 +220,8 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS            
 init_chat_db(chat_db)
 init_auth_db(auth_db)
+if not os.path.isdir(os.path.join(os.getcwd(), "ssh_key")):
+    gen_ssh_key()
 @scheduler.task("cron", id='clear_ip_list', minute='*')
 def clear_ip_list():
     global ip_list
