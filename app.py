@@ -479,13 +479,13 @@ def ord_input():
 @app.route("/ord/play", methods=['POST'])
 @auth_required
 def ord_play():
-    file = request.files['file']
-    if file.filename == '':
-        return 'No selected file', 403
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return "UPLOAD", 200
+    file = request.get_data()
+    filename = secure_filename(request.headers.get("X-FILE-NAME"))
+    if filename == '':
+        return jsonify({'message': "NO FILE"}), 400
+    if file and allowed_file(filename):
+        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        return jsonify({'message': "UPLOAD"}), 200
     else:
         abort(403)
 

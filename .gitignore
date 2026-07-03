@@ -2,6 +2,7 @@
 /.vscode
 /venv
 /ORDINANCE.ini
+/ord_play
 /__pycache__
 make_venv.bat
 checksums.ini
