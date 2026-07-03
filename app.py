@@ -47,7 +47,8 @@ players = {}
 UPLOAD_FOLDER = 'ord_play/render'
 ALLOWED_EXTENSIONS = {'dat', 'vtf'}
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+if not os.path.isdir(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
@@ -484,6 +485,8 @@ def ord_play():
     if filename == '':
         return jsonify({'message': "NO FILE"}), 400
     if file and allowed_file(filename):
+        if not os.path.isdir(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
         file.save(os.path.join(UPLOAD_FOLDER, filename))
         return jsonify({'message': "UPLOAD"}), 200
     else:
