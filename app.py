@@ -480,14 +480,15 @@ def ord_input():
 @app.route("/ord/play", methods=['POST'])
 @auth_required
 def ord_play():
-    file = request.get_data()
+    data = request.get_data()
     filename = secure_filename(request.headers.get("X-FILE-NAME"))
     if filename == '':
         return jsonify({'message': "NO FILE"}), 400
-    if file and allowed_file(filename):
+    if data and allowed_file(filename):
         if not os.path.isdir(UPLOAD_FOLDER):
             os.makedirs(UPLOAD_FOLDER)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        with open(os.path.join(UPLOAD_FOLDER, filename), 'wb') as f:
+            f.write(data)
         return jsonify({'message': "UPLOAD"}), 200
     else:
         abort(403)
