@@ -43,6 +43,7 @@ ip_bans_file = "ipbans.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
+dont_render = False
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
@@ -130,6 +131,8 @@ def console():
                 print("shutdown\n")
                 break
 def render_play():
+    global dont_render
+    dont_render = True
     file_list = os.listdir(UPLOAD_FOLDER)
     print(file_list)
     view_dir = os.path.join(os.getcwd() ,"view")
@@ -212,6 +215,7 @@ def render_play():
             UploadFiles.upload_dir(materials_dir, "/tf/materials", host, sftp_port, user, ssh_keyfile)
             UploadFiles.upload_dir(sound_dir, "/tf/sound", host, sftp_port, user, ssh_keyfile)
             UploadFiles.upload_file(os.path.join(view_dir, "view.mp4"), "/tf/public", host, sftp_port, user, ssh_keyfile)
+            dont_render = False
             break
         except Exception as e:
             os.remove(path)
@@ -608,12 +612,15 @@ def ord_play():
 @auth_required
 def ord_render():
     global inputs
+    global dont_render
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
     ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
     port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
     ren_inputs = []
     if not os.path.isdir(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
+    if dont_render:
+        return jsonify({'message': "NO_INPUT"}), 200
     if state == "dead":
         inputs = []
         return jsonify({'message': "ORD_ERROR"}), 200
