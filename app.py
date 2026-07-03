@@ -19,6 +19,7 @@ import configHelper
 import time
 import client
 import socket
+import traceback
 import sqlite3
 import re
 import time
@@ -29,6 +30,9 @@ from collections import Counter
 import wave
 import numpy as np
 from PIL import Image
+from srctools.vtf import VTF
+import av
+import vid2vtf
 
 
 config_file = "ORDINANCE.ini"
@@ -105,7 +109,87 @@ def console():
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
                 print("shutdown\n")
                 break
+def render_play():
+    file_list = os.listdir(UPLOAD_FOLDER)
+    print(file_list)
+    view_dir = os.path.join(os.getcwd() ,"view")
+    if not os.path.isdir(view_dir):
+        os.makedirs(view_dir)
+    for file in file_list:
+        try:
+            path = os.path.join(UPLOAD_FOLDER, file)
+            with open(path, 'rb') as f:
+                vtf_img = VTF.read(f)
+                vtf_img.load()
+            vtf_frame = vtf_img.get(frame=0)
+            img = vtf_frame.to_PIL()
+            img_a = np.array(img)
 
+            r = img_a[:, :, 0].astype(np.float32)
+            g = img_a[:, :, 1].astype(np.float32)
+            b = img_a[:, :, 2].astype(np.float32)
+
+            c_channels = r + g + b
+            normal_floats = ((c_channels / 768.0) - 0.5) * 2.0
+
+            flat_samples = normal_floats.flatten()
+
+            int16_samples = np.zeros_like(flat_samples, dtype=np.int16)
+
+            negative_mask = flat_samples < 0
+            int16_samples[negative_mask] = (flat_samples[negative_mask] * 32768.0).astype(np.int16)
+            int16_samples[~negative_mask] = (flat_samples[~negative_mask] * 32767.0).astype(np.int16)
+                    
+            with wave.open(os.path.join(view_dir, "output.wav"), 'wb') as w:
+                w.setnchannels(1)
+                w.setsampwidth(16 // 8)
+                w.setframerate(44100)
+                w.writeframes(int16_samples.tobytes())
+                    
+            video = av.open(os.path.join(view_dir, "view.mp4"), mode='w')
+            audio_input = av.open(os.path.join(view_dir, "output.wav"))
+
+            fps = 15        
+            v_stream = video.add_stream("libx264", rate=30)
+            v_stream.width = img.width
+            v_stream.height = img.height
+            v_stream.pix_fmt = 'yuv420p'
+            in_a_stream = audio_input.streams.audio[0]
+            a_stream = video.add_stream("aac", rate=in_a_stream.rate)
+            a_stream.layout = 'mono'
+
+            audio_duration = float(in_a_stream.duration * in_a_stream.time_base)
+            frames_count = int(audio_duration * fps)
+
+            video_frame = av.VideoFrame.from_image(img)
+
+            for i in range(frames_count):
+                video_frame.pts = i
+                # video_frame.time_base = v_stream.time_base
+                for packet in v_stream.encode(video_frame):
+                    video.mux(packet)
+            
+            for packet in v_stream.encode():
+                video.mux(packet)
+            
+            resampler = av.AudioResampler(format=a_stream.format, layout=a_stream.layout, rate=a_stream.rate)
+
+            for frame in audio_input.decode(in_a_stream):
+                resampled_frames = resampler.resample(frame)
+                for resampled_frame in resampled_frames:
+                    resampled_frame.pts = None
+                    for packet in a_stream.encode(resampled_frame):
+                        video.mux(packet)
+            
+            for packet in a_stream.encode():
+                video.mux(packet)
+            audio_input.close()
+            video.close()
+            os.remove(path)
+            vid2vtf.video_to_vtf(video=os.path.join(view_dir, "view.mp4"), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
+            break
+        except Exception as e:
+            os.remove(path)
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS            
@@ -501,11 +585,18 @@ def ord_render():
     ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
     port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
     ren_inputs = []
+    if not os.path.isdir(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
     if state == "dead":
         inputs = []
         return jsonify({'message': "ORD_ERROR"}), 200
     if len(inputs) < 1:
         print("just RENDER")
+        if len(os.listdir(UPLOAD_FOLDER)) > 0:
+            render_play_thread = threading.Thread(target=render_play, daemon=True)
+            render_play_thread.start()
+            return jsonify({'message': "RENDER"}), 200                            
+
         with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
             f.write("RENDER")
             f.close
@@ -536,6 +627,8 @@ def ord_render():
         return jsonify({'message': "NO_INPUT"}), 200
 
     return jsonify({'message': "RENDER"}), 200
+
+
 if __name__ == '__main__':
     
     port = int(os.environ.get("SERVER_PORT", 5000))

@@ -3,6 +3,7 @@
 /venv
 /ORDINANCE.ini
 /ord_play
+/view
 /__pycache__
 make_venv.bat
 checksums.ini
