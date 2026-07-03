@@ -47,7 +47,7 @@ log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_pos
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
 host = configHelper.read_config(config_file, "sftp", "host", default_value="127.0.0.1")
-port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
+sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
 user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky")
 ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value=os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
 ip_list = []
@@ -209,9 +209,9 @@ def render_play():
             vid2vtf.video_to_vtf(video=os.path.join(view_dir, "view.mp4"), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
             materials_dir = os.path.join(view_dir, "materials")
             sound_dir = os.path.join(view_dir, "sound")
-            UploadFiles.upload_dir(materials_dir, "/tf/materials", host, port, user, ssh_keyfile)
-            UploadFiles.upload_dir(sound_dir, "/tf/sound", host, port, user, ssh_keyfile)
-            UploadFiles.upload_file(os.path.join(view_dir, "view.mp4"), "/tf/public", host, port, user, ssh_keyfile)
+            UploadFiles.upload_dir(materials_dir, "/tf/materials", host, sftp_port, user, ssh_keyfile)
+            UploadFiles.upload_dir(sound_dir, "/tf/sound", host, sftp_port, user, ssh_keyfile)
+            UploadFiles.upload_file(os.path.join(view_dir, "view.mp4"), "/tf/public", host, sftp_port, user, ssh_keyfile)
             break
         except Exception as e:
             os.remove(path)
