@@ -166,7 +166,7 @@ def render_play():
             with wave.open(os.path.join(view_dir, "output.wav"), 'wb') as w:
                 w.setnchannels(1)
                 w.setsampwidth(16 // 8)
-                w.setframerate(44100)
+                w.setframerate(22050)
                 w.writeframes(int16_samples.tobytes())
                     
             video = av.open(os.path.join(view_dir, "view.mp4"), mode='w')
