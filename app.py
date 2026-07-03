@@ -8,6 +8,7 @@ from flask import abort
 from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
 import auth as au
 import os
@@ -24,6 +25,12 @@ import time
 import requests
 import json
 from collections import Counter
+
+import wave
+import numpy as np
+from PIL import Image
+
+
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
 ip_bans_file = "ipbans.txt"
@@ -37,7 +44,10 @@ ip_list = []
 temp_ban_list = []
 inputs = []
 players = {}
+UPLOAD_FOLDER = 'ord_play/render'
+ALLOWED_EXTENSIONS = {'dat', 'vtf'}
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
@@ -95,7 +105,9 @@ def console():
                 print("shutdown\n")
                 break
 
-            
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS            
 init_chat_db(chat_db)
 init_auth_db(auth_db)
 @scheduler.task("cron", id='clear_ip_list', minute='*')
@@ -467,7 +479,16 @@ def ord_input():
 @app.route("/ord/play", methods=['POST'])
 @auth_required
 def ord_play():
-    return 'PLACEHOLDER'
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 403
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return "UPLOAD", 200
+    else:
+        abort(403)
+
 @app.route("/ord/input/render",  methods=['GET'])
 @auth_required
 def ord_render():
