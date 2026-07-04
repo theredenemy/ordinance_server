@@ -20,6 +20,7 @@ def makeConfig():
    config_file.set("ORDINANCE", "playerclass", "UNKNOWN")
    config_file.set("ORDINANCE", "mode", "game")
    config_file.set("ORDINANCE", "allow_mode_change", "True")
+   config_file.set("ORDINANCE", "allow_ord_play", "True")
    config_file.set("ORDINANCE", "log_post_requests", "False")
    config_file.set("ORDINANCE", "log_chat", "False")
    config_file.set("ORDINANCE", "block_vpn", "False")

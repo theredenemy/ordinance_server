@@ -46,6 +46,7 @@ auth_db = "auth.db"
 dont_render = False
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
+allow_ord_play = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play", is_bool=True, default_value=True)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
 host = configHelper.read_config(config_file, "sftp", "host", default_value="127.0.0.1")
 sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
@@ -595,6 +596,9 @@ def ord_input():
 @app.route("/ord/play", methods=['POST'])
 @auth_required
 def ord_play():
+    allow_ord_play = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play", is_bool=True, default_value=True)
+    if not allow_ord_play:
+        return jsonify({'message': "NO"}), 403
     data = request.get_data()
     filename = secure_filename(request.headers.get("X-FILE-NAME"))
     if filename == '':
