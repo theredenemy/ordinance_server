@@ -27,6 +27,7 @@ import requests
 import json
 import paramiko
 import UploadFiles
+from urllib.parse import urlparse
 from collections import Counter
 
 import wave
@@ -35,6 +36,7 @@ from PIL import Image
 from srctools.vtf import VTF
 import av
 import vid2vtf
+from pyzbar.pyzbar import decode
 
 
 config_file = "ORDINANCE.ini"
@@ -68,6 +70,19 @@ if os.path.isfile(client_config_file) == False:
     makeClientConfig()
 if os.path.isfile(config_file) == False:
     makeConfig()
+
+def is_url(url):
+    try:
+        url_r = urlparse(url)
+        return all([url_r.scheme in ['http', 'https'], url_r.netloc])
+    except ValueError:
+        return False
+
+def download_file(url, filename):
+    file_data = requests.get(url, allow_redirects=True)
+    open(filename, 'wb').write(file_data.content)
+    return filename
+
 def gen_ssh_key():
     if not os.path.isdir(os.path.join(os.getcwd(), "ssh_key")):
         os.makedirs(os.path.join(os.getcwd(), "ssh_key"))
@@ -141,6 +156,7 @@ def render_play():
         os.makedirs(view_dir)
     for file in file_list:
         try:
+            img_to_wav = True
             path = os.path.join(UPLOAD_FOLDER, file)
             with open(path, 'rb') as f:
                 vtf_img = VTF.read(f)
@@ -149,76 +165,110 @@ def render_play():
             img = vtf_frame.to_PIL()
             img_a = np.array(img)
 
-            r = img_a[:, :, 0].astype(np.float32)
-            g = img_a[:, :, 1].astype(np.float32)
-            b = img_a[:, :, 2].astype(np.float32)
+            qrs = decode(img)
 
-            c_channels = r + g + b
-            normal_floats = ((c_channels / 768.0) - 0.5) * 2.0
 
-            flat_samples = normal_floats.flatten()
-
-            int16_samples = np.zeros_like(flat_samples, dtype=np.int16)
-
-            negative_mask = flat_samples < 0
-            int16_samples[negative_mask] = (flat_samples[negative_mask] * 32768.0).astype(np.int16)
-            int16_samples[~negative_mask] = (flat_samples[~negative_mask] * 32767.0).astype(np.int16)
-                    
-            with wave.open(os.path.join(view_dir, "output.wav"), 'wb') as w:
-                w.setnchannels(1)
-                w.setsampwidth(16 // 8)
-                w.setframerate(22050)
-                w.writeframes(int16_samples.tobytes())
-                    
-            video = av.open(os.path.join(view_dir, "view.mp4"), mode='w')
-            audio_input = av.open(os.path.join(view_dir, "output.wav"))
-
-            fps = 15        
-            v_stream = video.add_stream("libx264", rate=30)
-            v_stream.width = img.width
-            v_stream.height = img.height
-            v_stream.pix_fmt = 'yuv420p'
-            in_a_stream = audio_input.streams.audio[0]
-            a_stream = video.add_stream("aac", rate=in_a_stream.rate)
-            a_stream.layout = 'mono'
-
-            audio_duration = float(in_a_stream.duration * in_a_stream.time_base)
-            frames_count = int(audio_duration * fps)
-
-            video_frame = av.VideoFrame.from_image(img)
-
-            for i in range(frames_count):
-                video_frame.pts = i
-                # video_frame.time_base = v_stream.time_base
-                for packet in v_stream.encode(video_frame):
-                    video.mux(packet)
             
-            for packet in v_stream.encode():
-                video.mux(packet)
             
-            resampler = av.AudioResampler(format=a_stream.format, layout=a_stream.layout, rate=a_stream.rate)
+            text = None
+            if qrs:
+                text = qrs[0].data.decode('utf-8')
+                if text:
+                    print("this is a qrcode")
+                    print(text)
+                    if is_url(text):
+                        
+                        parse_url = urlparse(text)
 
-            for frame in audio_input.decode(in_a_stream):
-                resampled_frames = resampler.resample(frame)
-                for resampled_frame in resampled_frames:
-                    resampled_frame.pts = None
-                    for packet in a_stream.encode(resampled_frame):
+                        name, ext = os.path.splitext(parse_url.path)
+                        basename = os.path.basename(name)
+                        print(name, basename, ext)
+
+                        if ext in ['.mp4']:
+                            video_name = f"view{ext}"
+                            download_file(text, os.path.join(view_dir, video_name))
+                            img_to_wav = False
+                            
+                        else:
+                            img_to_wav = True
+                    else:
+                        img_to_wav = True
+            else:
+                img_to_wav = True
+                    
+
+            if img_to_wav:
+                r = img_a[:, :, 0].astype(np.float32)
+                g = img_a[:, :, 1].astype(np.float32)
+                b = img_a[:, :, 2].astype(np.float32)
+
+                c_channels = r + g + b
+                normal_floats = ((c_channels / 768.0) - 0.5) * 2.0
+
+                flat_samples = normal_floats.flatten()
+
+                int16_samples = np.zeros_like(flat_samples, dtype=np.int16)
+
+                negative_mask = flat_samples < 0
+                int16_samples[negative_mask] = (flat_samples[negative_mask] * 32768.0).astype(np.int16)
+                int16_samples[~negative_mask] = (flat_samples[~negative_mask] * 32767.0).astype(np.int16)
+                        
+                with wave.open(os.path.join(view_dir, "output.wav"), 'wb') as w:
+                    w.setnchannels(1)
+                    w.setsampwidth(16 // 8)
+                    w.setframerate(22050)
+                    w.writeframes(int16_samples.tobytes())
+                video_name = "view.mp4"       
+                video = av.open(os.path.join(view_dir, video_name), mode='w')
+                audio_input = av.open(os.path.join(view_dir, "output.wav"))
+
+                fps = 15        
+                v_stream = video.add_stream("libx264", rate=30)
+                v_stream.width = img.width
+                v_stream.height = img.height
+                v_stream.pix_fmt = 'yuv420p'
+                in_a_stream = audio_input.streams.audio[0]
+                a_stream = video.add_stream("aac", rate=in_a_stream.rate)
+                a_stream.layout = 'mono'
+
+                audio_duration = float(in_a_stream.duration * in_a_stream.time_base)
+                frames_count = int(audio_duration * fps)
+
+                video_frame = av.VideoFrame.from_image(img)
+
+                for i in range(frames_count):
+                    video_frame.pts = i
+                    # video_frame.time_base = v_stream.time_base
+                    for packet in v_stream.encode(video_frame):
                         video.mux(packet)
-            
-            for packet in a_stream.encode():
-                video.mux(packet)
-            audio_input.close()
-            video.close()
+                
+                for packet in v_stream.encode():
+                    video.mux(packet)
+                
+                resampler = av.AudioResampler(format=a_stream.format, layout=a_stream.layout, rate=a_stream.rate)
+
+                for frame in audio_input.decode(in_a_stream):
+                    resampled_frames = resampler.resample(frame)
+                    for resampled_frame in resampled_frames:
+                        resampled_frame.pts = None
+                        for packet in a_stream.encode(resampled_frame):
+                            video.mux(packet)
+                
+                for packet in a_stream.encode():
+                    video.mux(packet)
+                audio_input.close()
+                video.close()
             os.remove(path)
-            vid2vtf.video_to_vtf(video=os.path.join(view_dir, "view.mp4"), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
+            vid2vtf.video_to_vtf(video=os.path.join(view_dir, video_name), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
             materials_dir = os.path.join(view_dir, "materials")
             sound_dir = os.path.join(view_dir, "sound")
             UploadFiles.upload_dir(materials_dir, "/tf/materials", host, sftp_port, user, ssh_keyfile)
             UploadFiles.upload_dir(sound_dir, "/tf/sound", host, sftp_port, user, ssh_keyfile)
-            UploadFiles.upload_file(os.path.join(view_dir, "view.mp4"), "/tf/public", host, sftp_port, user, ssh_keyfile)
+            UploadFiles.upload_file(os.path.join(view_dir, video_name), "/tf/public", host, sftp_port, user, ssh_keyfile)
             dont_render = False
             break
         except Exception as e:
+            traceback.print_exception(e)
             os.remove(path)
 def allowed_file(filename):
     return '.' in filename and \
