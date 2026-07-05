@@ -88,7 +88,9 @@ def check_data_name(data_str):
     try:
         spilt_data_str = str(data_str).split()
         if spilt_data_str[0] == "PULL_DATA":
-            return spilt_data_str[1]
+            spilt_data_str.remove("PULL_DATA")
+            merge_data_str = ' '.join(spilt_data_str)
+            return merge_data_str
         else:
             return False
     except IndexError:
