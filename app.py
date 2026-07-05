@@ -318,7 +318,7 @@ def render_play():
                 video.close()
             if not video_name:
                 video_name = "view.mp4"
-                shutil.copyfile(os.path.join(os.getcwd, video_name), os.path.join(view_dir, video_name))
+                shutil.copyfile(os.path.join(os.getcwd(), video_name), os.path.join(view_dir, video_name))
             os.remove(path)
             vid2vtf.video_to_vtf(video=os.path.join(view_dir, video_name), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
             materials_dir = os.path.join(view_dir, "materials")
