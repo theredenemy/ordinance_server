@@ -146,7 +146,7 @@ def console():
                 gen_ssh_key()
             if cmd == "exit".lower():
                 print("shutdown\n")
-                os.kill(os.getpid(), signal.SIGINT)
+                os._exit(0)
         except Exception as e:
             print(e)
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
