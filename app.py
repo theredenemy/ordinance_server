@@ -35,7 +35,7 @@ from collections import Counter
 import wave
 import numpy as np
 from PIL import Image
-from srctools.vtf import VTF
+import srctools.vtf as vtf
 import av
 import vid2vtf
 import shutil
@@ -193,7 +193,7 @@ def render_play():
             img_to_wav = True
             path = os.path.join(UPLOAD_FOLDER, file)
             with open(path, 'rb') as f:
-                vtf_img = VTF.read(f)
+                vtf_img = vtf.VTF.read(f)
                 vtf_img.load()
             vtf_frame = vtf_img.get(frame=0)
             img = vtf_frame.to_PIL()
@@ -555,7 +555,16 @@ def video_data_ui():
             img_io = io.BytesIO()
             img.save(img_io)
             img_io.seek(0)
-            return send_file(img_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.png")
+            vtf_io = io.BytesIO()
+            open_img = Image.open(img_io)
+            rgb_data = open_img.resize((128, 128)).convert("RGB").tobytes()
+            vtf_data = vtf.VTF(128, 128)
+            vtf_frame = vtf_data.get(frame=0)
+            vtf_frame.copy_from(rgb_data, format=vtf.ImageFormats.RGB888)
+            vtf_data.save(vtf_io)
+            vtf_io.seek(0)
+
+            return send_file(vtf_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.vtf")
         else:
             return "NO DIR"
 
