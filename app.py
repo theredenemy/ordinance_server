@@ -168,7 +168,11 @@ def console():
                 break
 def render_play():
     global dont_render
+    global allow_ord_play_img_playback
+    global allow_ord_play_video_download
     dont_render = True
+    allow_ord_play_video_download = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_video_download", is_bool=True, default_value=True)
+    allow_ord_play_img_playback = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_img_playback", is_bool=True, default_value=True)
     video_name = None
     file_list = os.listdir(UPLOAD_FOLDER)
     print(file_list)
