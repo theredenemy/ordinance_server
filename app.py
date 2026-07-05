@@ -564,7 +564,7 @@ def video_data_ui():
             # vtf_data.save(vtf_io)
             # vtf_io.seek(0)
 
-            return send_file(img_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.vtf")
+            return send_file(img_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.png")
         else:
             return "NO DIR"
 
