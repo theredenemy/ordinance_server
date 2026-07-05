@@ -39,6 +39,8 @@ from srctools.vtf import VTF
 import av
 import vid2vtf
 import shutil
+import io
+import qrcode
 from pyzbar.pyzbar import decode
 
 
@@ -66,6 +68,7 @@ inputs = []
 players = {}
 UPLOAD_FOLDER = 'ord_play/render'
 ALLOWED_EXTENSIONS = {'dat', 'vtf'}
+ALLOWED_VIDEO_DATA_EXTENSIONS = {'mp4'}
 app = Flask(__name__)
 if not os.path.isdir(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -337,7 +340,10 @@ def render_play():
     dont_render = False
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS            
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_video_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_DATA_EXTENSIONS            
 init_chat_db(chat_db)
 init_auth_db(auth_db)
 if not os.path.isdir(os.path.join(os.getcwd(), "ssh_key")):
@@ -530,6 +536,50 @@ def tokens_ui():
         cursor.execute("SELECT token FROM tokens")
         rows = cursor.fetchall()
     return render_template("tokens_ui.html", tokens=rows)
+@app.route("/admin/video_data", methods=['GET', 'POST'])
+@auth_required
+def video_data_ui():
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
+    delete_button_trigger = request.args.get("delete")
+    downloadqr = request.args.get("downloadqr")
+    if delete_button_trigger:
+        video_data_dir = os.path.join(data_dir, delete_button_trigger)
+        if os.path.isdir(video_data_dir):
+            shutil.rmtree(video_data_dir)
+        return '<script>window.location.href="/admin/video_data";</script>'
+    if downloadqr:
+        video_data_dir = os.path.join(data_dir, downloadqr)
+        if os.path.isdir(video_data_dir):
+            img = qrcode.make(f"PULL_DATA {downloadqr}")
+            img_io = io.BytesIO()
+            img.save(img_io)
+            img_io.seek(0)
+            return send_file(img_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.png")
+        else:
+            return "NO DIR"
+
+    if request.method == "POST":
+        name = request.form.get('name')
+        file = request.files['file']
+        if file.filename == '':
+            return 'No selected file'
+        if file and allowed_video_file(file.filename):
+            filename = secure_filename(file.filename)
+            video_data_dir = os.path.join(data_dir, name)
+            if os.path.isdir(video_data_dir):
+                shutil.rmtree(video_data_dir)
+                os.makedirs(video_data_dir)
+            else:
+                os.makedirs(video_data_dir)
+            file.save(os.path.join(video_data_dir, filename))
+            data_config = os.path.join(video_data_dir, "data.ini")
+            configHelper.set_config(data_config, "data", "video_name", filename)
+        return '<script>window.location.href="/admin/video_data";</script>'
+    video_data_dirs = []
+    for path in os.listdir(data_dir):
+        video_data_dirs.append(os.path.basename(path))
+    return render_template("video_data_ui.html", video_data_dirs=video_data_dirs)
 @app.route("/admin/set/inputs", methods=['GET', 'POST'])
 @auth_required
 def redirect_to_ordinance_ui():

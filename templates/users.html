@@ -15,7 +15,7 @@
             <tr>
                 <td><strong>{{ username['username'] }}</strong></td>
                 <td><a href="/admin/users?delete={{ username['username'] }}" class="btn-del" onclick="return confirm('Delete?')">Delete</a></td>
-               <td><a href="/admin/users/password?user={{ username['username'] }}" class="btn-del">Change Password</a></td>
+               <td><a href="/admin/users/password?user={{ username['username'] }}" class="btn-change">Change Password</a></td>
             </tr>
             {% endfor %}
         </table>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div class="header"><h1>VIDEO DATA</h1></div>
+    <div class="container">
+        <form method="post" enctype="multipart/form-data">
+            Name <input name="name"/>
+            Video <input type=file name=file accept=".mp4">
+            <button type="submit" class="btn-add">Submit</button>
+        </form>
+
+        <table>
+            <tr><th>Name</th><th></th></tr>
+            {% for video_data in video_data_dirs %}
+            <tr>
+                <td><strong>{{ video_data }}</strong></td>
+                <td><a href="/admin/video_data?delete={{ video_data }}" class="btn-del" onclick="return confirm('Delete?')">Delete</a></td>
+               <td><a href="/admin/video_data?downloadqr={{ video_data }}" class="btn-download">Download QR Code</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
