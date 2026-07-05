@@ -37,6 +37,7 @@ from PIL import Image
 from srctools.vtf import VTF
 import av
 import vid2vtf
+import shutil
 from pyzbar.pyzbar import decode
 
 
@@ -155,6 +156,9 @@ def render_play():
     view_dir = os.path.join(os.getcwd() ,"view")
     if not os.path.isdir(view_dir):
         os.makedirs(view_dir)
+    else:
+        shutil.rmtree(view_dir)
+        os.makedirs(view_dir)
     for file in file_list:
         try:
             img_to_wav = True
@@ -188,7 +192,7 @@ def render_play():
                         if ext in ['.mp4']:
                             video_name = f"view{ext}"
                             video_name_download = f"view_download{ext}"
-                            download_file(text, os.path.join(view_dir, video_name))
+                            download_file(text, os.path.join(view_dir, video_name_download))
                             # ffmpeg command :)
                             os.system(f'ffmpeg -y -i {os.path.join(view_dir, video_name_download)} -vf "scale=256:128" -ar 11025 {os.path.join(view_dir, video_name)}')
                             if os.path.isfile(os.path.join(view_dir, video_name)):
