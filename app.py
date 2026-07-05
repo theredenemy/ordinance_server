@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
 import auth as au
 import os
+import subprocess
 import threading
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
@@ -186,8 +187,15 @@ def render_play():
 
                         if ext in ['.mp4']:
                             video_name = f"view{ext}"
+                            video_name_download = f"view_download{ext}"
                             download_file(text, os.path.join(view_dir, video_name))
-                            img_to_wav = False
+                            # ffmpeg command :)
+                            os.system(f'ffmpeg -y -i {os.path.join(view_dir, video_name_download)} -vf "scale=256:128" -ar 11025 {os.path.join(view_dir, video_name)}')
+                            if os.path.isfile(os.path.join(view_dir, video_name)):
+                                print("got video")
+                                img_to_wav = False
+                            else:
+                                img_to_wav = True
                             
                         else:
                             img_to_wav = True
