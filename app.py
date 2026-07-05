@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
 import auth as au
 import os
-import subprocess
+import signal
 import threading
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
@@ -144,6 +144,9 @@ def console():
                     print(steamid, player)
             if cmd == "gen_ssh_key".lower():
                 gen_ssh_key()
+            if cmd == "exit".lower():
+                print("shutdown\n")
+                os.kill(os.getpid(), signal.SIGINT)
         except Exception as e:
             print(e)
             if type(e).__name__ == "KeyboardInterrupt" or type(e).__name__ == "EOFError":
