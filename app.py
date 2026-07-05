@@ -28,6 +28,7 @@ import requests
 import json
 import paramiko
 import UploadFiles
+import pathlib
 from urllib.parse import urlparse
 from collections import Counter
 
@@ -48,9 +49,12 @@ client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
 dont_render = False
+data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
 allow_ord_play = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play", is_bool=True, default_value=True)
+allow_ord_play_video_download = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_video_download", is_bool=True, default_value=True)
+allow_ord_play_img_playback = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_img_playback", is_bool=True, default_value=True)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
 host = configHelper.read_config(config_file, "sftp", "host", default_value="127.0.0.1")
 sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
@@ -78,6 +82,16 @@ def is_url(url):
         url_r = urlparse(url)
         return all([url_r.scheme in ['http', 'https'], url_r.netloc])
     except ValueError:
+        return False
+
+def check_data_name(data_str):
+    try:
+        spilt_data_str = str(data_str).split()
+        if spilt_data_str[0] == "PULL_DATA":
+            return spilt_data_str[1]
+        else:
+            return False
+    except IndexError:
         return False
 
 def download_file(url, filename):
@@ -155,6 +169,7 @@ def console():
 def render_play():
     global dont_render
     dont_render = True
+    video_name = None
     file_list = os.listdir(UPLOAD_FOLDER)
     print(file_list)
     view_dir = os.path.join(os.getcwd() ,"view")
@@ -165,6 +180,7 @@ def render_play():
         os.makedirs(view_dir)
     for file in file_list:
         try:
+            
             img_to_wav = True
             path = os.path.join(UPLOAD_FOLDER, file)
             with open(path, 'rb') as f:
@@ -182,10 +198,12 @@ def render_play():
             text = None
             if qrs:
                 text = qrs[0].data.decode('utf-8')
+                
                 if text:
                     print("this is a qrcode")
                     print(text)
-                    if is_url(text):
+                    data_name = check_data_name(text) 
+                    if is_url(text) and allow_ord_play_video_download:
                         
                         parse_url = urlparse(text)
 
@@ -207,13 +225,33 @@ def render_play():
                             
                         else:
                             img_to_wav = True
+                    elif data_name:
+                        data_name_dir = os.path.join(data_dir, data_name)
+                        data_config = os.path.join(data_name_dir, "data.ini")
+                        if os.path.isdir(data_name_dir) and os.path.isfile(data_config):
+                            video_data_name = configHelper.read_config(data_config, "data", "video_name")
+                            video_data_path = os.path.join(data_name_dir, video_data_name)
+                            if os.path.isfile(video_data_path):
+                                ext = pathlib.Path(video_data_path).suffix
+                                if ext in ['.mp4']:
+                                    video_name = f"view{ext}"
+                                    os.system(f'ffmpeg -y -i {video_data_path} -vf "scale=256:128" -ar 11025 {os.path.join(view_dir, video_name)}')
+                                    img_to_wav = False
+                                else:
+                                    img_to_wav = True
+                            else:
+                                img_to_wav = True
+                        else:
+                            img_to_wav = True
+
+
                     else:
                         img_to_wav = True
             else:
                 img_to_wav = True
                     
 
-            if img_to_wav:
+            if img_to_wav and allow_ord_play_img_playback:
                 r = img_a[:, :, 0].astype(np.float32)
                 g = img_a[:, :, 1].astype(np.float32)
                 b = img_a[:, :, 2].astype(np.float32)
@@ -274,6 +312,9 @@ def render_play():
                     video.mux(packet)
                 audio_input.close()
                 video.close()
+            if not video_name:
+                video_name = "view.mp4"
+                shutil.copyfile(os.path.join(os.getcwd, video_name), os.path.join(view_dir, video_name))
             os.remove(path)
             vid2vtf.video_to_vtf(video=os.path.join(view_dir, video_name), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
             materials_dir = os.path.join(view_dir, "materials")
@@ -286,6 +327,8 @@ def render_play():
         except Exception as e:
             traceback.print_exception(e)
             os.remove(path)
+            
+    dont_render = False
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS            
@@ -293,6 +336,8 @@ init_chat_db(chat_db)
 init_auth_db(auth_db)
 if not os.path.isdir(os.path.join(os.getcwd(), "ssh_key")):
     gen_ssh_key()
+if not os.path.isdir(data_dir):
+    os.makedirs(data_dir)
 @scheduler.task("cron", id='clear_ip_list', minute='*')
 def clear_ip_list():
     global ip_list

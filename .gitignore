@@ -1,6 +1,7 @@
 /.venv
 /.vscode
 /venv
+/data
 /ORDINANCE.ini
 /ord_play
 /view
@@ -18,3 +19,4 @@ ipbans.txt
 post_data_logs.txt
 chat_logs.txt
 test2.py
+test3.py
