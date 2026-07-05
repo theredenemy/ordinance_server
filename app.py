@@ -555,16 +555,16 @@ def video_data_ui():
             img_io = io.BytesIO()
             img.save(img_io)
             img_io.seek(0)
-            vtf_io = io.BytesIO()
-            open_img = Image.open(img_io)
-            rgb_data = open_img.resize((128, 128)).convert("RGB").tobytes()
-            vtf_data = vtf.VTF(128, 128)
-            vtf_frame = vtf_data.get(frame=0)
-            vtf_frame.copy_from(rgb_data, format=vtf.ImageFormats.RGB888)
-            vtf_data.save(vtf_io)
-            vtf_io.seek(0)
+            # vtf_io = io.BytesIO()
+            # open_img = Image.open(img_io)
+            # rgb_data = open_img.resize((128, 128)).convert("RGB").tobytes()
+            # vtf_data = vtf.VTF(128, 128)
+            # vtf_frame = vtf_data.get(frame=0)
+            # vtf_frame.copy_from(rgb_data, format=vtf.ImageFormats.RGB888)
+            # vtf_data.save(vtf_io)
+            # vtf_io.seek(0)
 
-            return send_file(vtf_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.vtf")
+            return send_file(img_io, as_attachment=True, download_name=f"{downloadqr}_PULLDATA.vtf")
         else:
             return "NO DIR"
 
