@@ -206,7 +206,7 @@ def render_play():
             
             text = None
             if qrs:
-                text = qrs[0].data.decode('utf-8')
+                text = str(qrs[0].data.decode('utf-8'))
                 
                 if text:
                     print("this is a qrcode")
