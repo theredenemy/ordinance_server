@@ -9,7 +9,7 @@ from flask_apscheduler import APScheduler
 from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
-from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db
+from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db, admin_only
 import auth as au
 import os
 import signal
@@ -479,6 +479,7 @@ def admin_panel():
     return render_template("admin_panel.html", username=username)
 @app.route("/admin/users", methods=['GET', 'POST'])
 @auth_required
+@admin_only
 def users():
     if au.use_token:
         return "FUCK YOU BREAK", 403
@@ -501,6 +502,7 @@ def users():
     return render_template("users.html", users=rows)
 @app.route("/admin/users/password", methods=['GET', 'POST'])
 @auth_required
+@admin_only
 def change_password_ui():
     if au.use_token:
         return "FUCK YOU BREAK", 403
@@ -512,8 +514,23 @@ def change_password_ui():
         edit_user(username, password)
         return "<script>window.history.go(-2);</script>"
     return render_template("change_password.html", username=username)
+@app.route("/admin/my/password", methods=['GET', 'POST'])
+@auth_required
+def change_my_password_ui():
+    auth_u = request.authorization
+    if au.use_token:
+        return "FUCK YOU BREAK", 403
+    username = auth_u.username
+    if not username:
+        return "NO USER", 403
+    if request.method == "POST":
+        password = request.form.get('password')
+        edit_user(username, password)
+        return "<script>window.history.go(-2);</script>"
+    return render_template("change_password.html", username=username)
 @app.route("/admin/tokens", methods=['GET', 'POST'])
 @auth_required
+@admin_only
 def tokens_ui():
     if au.use_token:
         return "FUCK YOU BREAK", 403

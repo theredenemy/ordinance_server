@@ -6,8 +6,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import os
 import secrets
+import configHelper
 db_file = None 
 use_token = False
+admins_file = "admins.ini"
 def get_db():
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
@@ -84,5 +86,25 @@ def auth_required(f):
         else:
             return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="PLEASE LOGIN TO ORDINANCE BREAK"'})
     return logon
-            
+def admin_only(f):
+    @wraps(f)
+    def admin_check(*args, **kwargs):
+        auth = request.authorization
+        if current_app.debug:
+            return f(*args, **kwargs)
+        if check_users_if_empty():
+            return f(*args, **kwargs)
+        key_header = request.headers.get('X-ORD-KEY')
+        if auth and auth.username:
+            is_admin = configHelper.read_config(admins_file, auth.username, "admin", is_bool=True, default_value=False)
+            if is_admin:
+                return f(*args, **kwargs)
+            else:
+                return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+        elif key_header:
+            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+        else:
+            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+    return admin_check
+
             
