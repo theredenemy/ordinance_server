@@ -100,11 +100,11 @@ def admin_only(f):
             if is_admin:
                 return f(*args, **kwargs)
             else:
-                return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+                return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 403
         elif key_header:
-            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 403
         else:
-            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>"
+            return "<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 403
     return admin_check
 
             
