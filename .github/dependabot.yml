@@ -4,11 +4,9 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
-multi-ecosystem-groups:
-  main:
-    schedule:
-      interval: "daily"
+    
 updates:
   - package-ecosystem: "pip"
     directory: "/"
-    multi-ecosystem-group: "main"
+    schedule:
+      interval: "daily"
