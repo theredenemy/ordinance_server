@@ -2,7 +2,7 @@ Flask==3.1.2
 Flask-APScheduler==1.13.1
 python-dateutil==2.9.0.post0
 requests==2.34.2
-vid2vtf==2.5.5
+vid2vtf==2.6.1
 srctools==2.7.0
 paramiko==5.0.0
 pyzbar==0.1.9
