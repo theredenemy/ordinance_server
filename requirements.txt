@@ -4,7 +4,7 @@ python-dateutil==2.9.0.post0
 requests==2.34.2
 vid2vtf==2.5.5
 srctools==2.7.0
-paramiko==4.0.0
+paramiko==5.0.0
 pyzbar==0.1.9
 qrcode[all]==8.2
 numpy==2.5.0
