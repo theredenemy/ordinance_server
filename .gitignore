@@ -22,3 +22,5 @@ chat_logs.txt
 test2.py
 test3.py
 admins.ini
+requirements.txt.old
+uninstall_pkg.txt

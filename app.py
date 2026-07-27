@@ -6,20 +6,17 @@ from flask import redirect
 from flask import send_file
 from flask import abort
 from flask_apscheduler import APScheduler
-from flask import session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db, admin_only
 import auth as au
 import os
-import signal
 import threading
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
 import configHelper
 import time
 import client
-import socket
 import traceback
 import sqlite3
 import re
@@ -34,7 +31,6 @@ from collections import Counter
 
 import wave
 import numpy as np
-from PIL import Image
 import srctools.vtf as vtf
 import av
 import vid2vtf
