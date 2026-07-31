@@ -645,7 +645,7 @@ def show_info():
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
     joined_inputs = ' '.join(inputs)
-    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs}), 200
+    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp}), 200
 @app.route("/ord/mode", methods=['POST'])
 @auth_required
 def set_mode():
