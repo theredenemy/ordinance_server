@@ -62,6 +62,7 @@ ip_list = []
 temp_ban_list = []
 inputs = []
 players = {}
+server_start_timestamp = int(time.time())
 UPLOAD_FOLDER = 'ord_play/render'
 ALLOWED_EXTENSIONS = {'dat', 'vtf'}
 ALLOWED_VIDEO_DATA_EXTENSIONS = {'mp4', 'mkv'}
@@ -629,6 +630,9 @@ def ordinance_ui():
             return "BREAK"
         
     return render_template("ordinance_ui.html", inputs=' '.join(inputs), mode=mode, state=state)
+@app.route("/server/status")
+def server_status():
+    return jsonify({"server_start_timestamp" : server_start_timestamp, "temp_bans" : len(temp_ban_list)})
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
