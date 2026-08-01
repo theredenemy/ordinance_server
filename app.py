@@ -145,13 +145,13 @@ def console():
         try:
             global players
             cmd = input()
-            if cmd == "edit_user".lower():
+            if cmd.lower() == "edit_user":
                 print("ENTER USERNAME\n")
                 user = input()
                 print("ENTER PASSWORD\n")
                 password = input()
                 edit_user(user, password)
-            if cmd == "del_user".lower():
+            if cmd.lower() == "del_user":
                 print("ENTER USERNAME\n")
                 user = input()
                 if user:
@@ -161,11 +161,14 @@ def console():
                         with sqlite3.connect(auth_db) as conn:
                             conn.execute("DELETE FROM users WHERE username = ?", (user,))
                         print(f"User {user} Has Been Deleted...")
-            if cmd == "players".lower():
+            if cmd.lower() == "players":
                 for steamid, player in players.items():
                     print(steamid, player)
-            if cmd == "gen_ssh_key".lower():
+            if cmd.lower() == "gen_ssh_key":
                 gen_ssh_key()
+            if cmd.lower() == "reset_timestamp":
+                global server_start_timestamp
+                server_start_timestamp = time.time()
             if cmd == "exit".lower():
                 print("shutdown\n")
                 os._exit(0)
