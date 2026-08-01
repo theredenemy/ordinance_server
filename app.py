@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db, admin_only
 import auth as au
 import os
+from werkzeug import serving
 import threading
 from makeConfig import makeConfig
 from makeConfig import makeClientConfig
@@ -39,13 +40,14 @@ import io
 import qrcode
 from pyzbar.pyzbar import decode
 
-
+no_log_endpoints = ["/server/status"]
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
 ip_bans_file = "ipbans.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
+parent_log_request = serving.WSGIRequestHandler.log_request
 dont_render = False
 data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
@@ -76,7 +78,11 @@ if os.path.isfile(client_config_file) == False:
     makeClientConfig()
 if os.path.isfile(config_file) == False:
     makeConfig()
-
+def log_request(self, *args, **kwargs):
+    if self.path in no_log_endpoints:
+        return
+    parent_log_request(self, *args, **kwargs)
+serving.WSGIRequestHandler.log_request = log_request
 def is_url(url):
     try:
         url_r = urlparse(url)
