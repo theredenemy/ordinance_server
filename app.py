@@ -464,7 +464,14 @@ def senddata():
     steamid = str(json_data['steamid'])
     print(f"{player}:{steamid} Has Been Put in Server")
     players[steamid] = player
-    return jsonify({'message': "RENDER"}), 200
+    return jsonify({'message': "Got_Data"}), 200
+@app.route("/ord/players/api/clear", methods=['GET'])
+@auth_required
+def clearplayerlist():
+    global players
+    players = {}
+    return jsonify({'message': "CLEARED"}), 200
+
 @app.route("/logout")
 @auth_required
 def logout():
