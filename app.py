@@ -454,7 +454,7 @@ def download_icon():
 @app.route("/getdata", methods=['POST'])
 @auth_required
 def getdata_old():
-    return redirect('/ord/players/api/senddata')
+    return redirect('/ord/players/api/senddata', code=307)
 @app.route("/ord/players/api/senddata", methods=['POST'])
 @auth_required
 def senddata():
