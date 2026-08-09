@@ -453,7 +453,11 @@ def download_icon():
         abort(404)
 @app.route("/getdata", methods=['POST'])
 @auth_required
-def getdata():
+def getdata_old():
+    return redirect('/ord/players/api/senddata')
+@app.route("/ord/players/api/senddata", methods=['POST'])
+@auth_required
+def senddata():
     global players
     json_data = request.json
     player = str(json_data['player'])
@@ -461,7 +465,6 @@ def getdata():
     print(f"{player}:{steamid} Has Been Put in Server")
     players[steamid] = player
     return jsonify({'message': "RENDER"}), 200
-
 @app.route("/logout")
 @auth_required
 def logout():
