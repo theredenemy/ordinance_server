@@ -40,7 +40,7 @@ import io
 import qrcode
 from pyzbar.pyzbar import decode
 
-no_log_endpoints = ["/server/status", "/ord/players/api/senddata", "/ord/players/api/clear", "/ord/chat/send"]
+no_log_endpoints = ["/server/status", "/ord/players/api/senddata", "/ord/players/api/clear", "/ord/chat/send", "/ord/info"]
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
 ip_bans_file = "ipbans.txt"
@@ -151,8 +151,17 @@ def audit_log(log_str):
             file.close()
 def get_username():
     auth = request.authorization
+    db = get_db()
+    key_header = request.headers.get('X-ORD-KEY')
+        
+    if key_header:
+        ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
+        if ord_key:
+            use_token = True
     if auth:
         username = auth.username
+    elif use_token:
+        username = "TOKEN_LOGIN"
     else:
         username = "NOT_LOGGED_IN"
     return username
