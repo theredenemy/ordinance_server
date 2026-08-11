@@ -52,6 +52,7 @@ dont_render = False
 data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
+audit_logs = configHelper.read_config(config_file, "ORDINANCE", "audit_logs", is_bool=True, default_value=False)
 allow_ord_play = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play", is_bool=True, default_value=True)
 allow_ord_play_video_download = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_video_download", is_bool=True, default_value=True)
 allow_ord_play_img_playback = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_img_playback", is_bool=True, default_value=True)
@@ -140,6 +141,21 @@ def ban(ip):
         f.write(f"{ip}\n")
         f.close()
     return
+def audit_log(log_str):
+    audit_logs = configHelper.read_config(config_file, "ORDINANCE", "audit_logs", is_bool=True, default_value=False)
+    if audit_logs:
+        with open("audit_logs.txt", 'a', encoding="utf-8", errors='ignore') as file:
+            ti_c = time.ctime(time.time())
+            time_c = time.strptime(ti_c)
+            file.write(f"{time.strftime("%Y-%m-%d-%H:%M:%S", time_c)} : {log_str}\n")
+            file.close()
+def get_username():
+    auth = request.authorization
+    if auth:
+        username = auth.username
+    else:
+        username = "NOT_LOGGED_IN"
+    return username
 def console():
     while True:
         try:
@@ -376,6 +392,9 @@ def check_ip():
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
+    username = get_username()
+    if not request.path in no_log_endpoints:
+        audit_log(f"IP:{request.remote_addr} USER:{username} : METHOD:{request.method} >> URL:{request.url}")
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
         data = json.loads(ipinfo.text)
@@ -391,6 +410,7 @@ def check_ip():
         with open("post_data_logs.txt", 'a', encoding="utf-8", errors='ignore') as f:
             f.write(f"{request.remote_addr} : {post_data}\n")
             f.close()
+    
     if os.path.isfile(ip_bans_file):
         file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
         for ip_ban in file.readlines():
@@ -618,6 +638,7 @@ def video_data_ui():
             file.save(os.path.join(video_data_dir, filename))
             data_config = os.path.join(video_data_dir, "data.ini")
             configHelper.set_config(data_config, "data", "video_name", filename)
+            audit_log(f"USER {get_username()} Has Uploaded a Video To ORD_PLAY : NAME:{name} FILENAME:{filename}")
         return '<script>window.location.href="/admin/video_data";</script>'
     video_data_dirs = []
     for path in os.listdir(data_dir):
@@ -692,6 +713,7 @@ def admin_chat_ui():
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
                 conn.execute("INSERT OR REPLACE INTO chat (message, cmd) VALUES (?, ?)", (message.lower(), cmd))
+            audit_log(f"USER : {get_username()} MESSAGE : {message} CMD : {cmd}")
             return '<script>window.location.href="/ord/chat/admin";</script>'
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
