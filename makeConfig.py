@@ -23,6 +23,7 @@ def makeConfig():
    config_file.set("ORDINANCE", "allow_ord_play", "True")
    config_file.set("ORDINANCE", "log_post_requests", "False")
    config_file.set("ORDINANCE", "log_chat", "False")
+   config_file.set("ORDINANCE", "audit_logs", "False")
    config_file.set("ORDINANCE", "block_vpn", "False")
 
 
