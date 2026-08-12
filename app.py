@@ -163,6 +163,8 @@ def get_username():
         ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
         if ord_key:
             use_token = True
+        else:
+            use_token = False
     if auth:
         username = auth.username
     elif use_token:
