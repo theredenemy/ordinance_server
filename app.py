@@ -156,6 +156,7 @@ def audit_log(log_str, log_to_console=True):
 def get_username():
     auth = request.authorization
     db = get_db()
+    use_token = False
     key_header = request.headers.get('X-ORD-KEY')
         
     if key_header:
