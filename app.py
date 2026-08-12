@@ -141,13 +141,17 @@ def ban(ip):
         f.write(f"{ip}\n")
         f.close()
     return
-def audit_log(log_str):
+def audit_log(log_str, log_to_console=True):
     audit_logs = configHelper.read_config(config_file, "ORDINANCE", "audit_logs", is_bool=True, default_value=False)
+    ti_c = time.ctime(time.time())
+    time_c = time.strptime(ti_c)
+    log_msg = f"{time.strftime("%Y-%m-%d-%H:%M:%S", time_c)} : {log_str}"
+    if log_to_console:
+        print(log_msg)
     if audit_logs:
         with open("audit_logs.txt", 'a', encoding="utf-8", errors='ignore') as file:
-            ti_c = time.ctime(time.time())
-            time_c = time.strptime(ti_c)
-            file.write(f"{time.strftime("%Y-%m-%d-%H:%M:%S", time_c)} : {log_str}\n")
+            file.write(log_msg)
+            file.write("\n")
             file.close()
 def get_username():
     auth = request.authorization
@@ -403,7 +407,7 @@ def check_ip():
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     username = get_username()
     if not request.path in no_log_endpoints:
-        audit_log(f"IP:{request.remote_addr} USER:{username} : METHOD:{request.method} >> URL:{request.url}")
+        audit_log(f"IP:{request.remote_addr} USER:{username} : METHOD:{request.method} >> URL:{request.url}", log_to_console=False)
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
         data = json.loads(ipinfo.text)
@@ -848,6 +852,7 @@ def ord_play():
     if filename == '':
         return jsonify({'message': "NO FILE"}), 400
     if data and allowed_file(filename):
+        audit_log(f"SAVING FILE {os.path.join(UPLOAD_FOLDER, filename)}")
         if not os.path.isdir(UPLOAD_FOLDER):
             os.makedirs(UPLOAD_FOLDER)
         with open(os.path.join(UPLOAD_FOLDER, filename), 'wb') as f:
