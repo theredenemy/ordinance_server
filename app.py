@@ -40,7 +40,7 @@ import io
 import qrcode
 from pyzbar.pyzbar import decode
 
-no_log_endpoints = ["/server/status", "/ord/players/api/senddata", "/ord/players/api/clear", "/ord/chat/send"]
+no_log_endpoints = ["/server/status", "/ord/players/api/senddata", "/ord/players/api/clear"]
 config_file = "ORDINANCE.ini"
 motd_file = "motd.txt"
 ip_bans_file = "ipbans.txt"
