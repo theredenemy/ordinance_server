@@ -753,7 +753,7 @@ def admin_chat_ui():
         cmd = request.form.get('cmd')
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
-                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send) VALUES (?, ?, ?)", (message.lower(), cmd, True))
+                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, True))
             audit_log(f"USER : {get_username()} MESSAGE : {message} CMD : {cmd}")
             return '<script>window.location.href="/ord/chat/admin";</script>'
     with sqlite3.connect(chat_db) as conn:
@@ -786,7 +786,7 @@ def chat_send():
 
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT message, cmd, send FROM chat")
+        cursor.execute("SELECT message, cmd, send_msg FROM chat")
         rows = cursor.fetchall()
     for trigger, command, send_db in rows:
         send_bool = bool(send_db)
