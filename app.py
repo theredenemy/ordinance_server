@@ -498,8 +498,13 @@ def senddata():
     json_data = request.json
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
-    print(f"{player}:{steamid} Has Been Put in Server")
-    players[steamid] = player
+    joined = bool(json_data['joined'])
+    if joined:
+        audit_log(f"{player}:{steamid} Has Been Put in The Server", log_to_console=True)
+        players[steamid] = player
+    else:
+        audit_log(f"{player}:{steamid} Has Left The Server", log_to_console=True)
+        players.pop(steamid, None)
     return jsonify({'message': "Got_Data"}), 200
 @app.route("/ord/players/api/clear", methods=['GET'])
 @auth_required
