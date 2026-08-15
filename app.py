@@ -500,8 +500,9 @@ def senddata():
     player = str(json_data['player'])
     steamid = str(json_data['steamid'])
     joined = bool(json_data['joined'])
+    ip = str(json_data['ip'])
     if joined:
-        audit_log(f"{player}:{steamid} Has Been Put in The Server", log_to_console=True)
+        audit_log(f"{player}:{steamid}:{ip} Has Been Put in The Server", log_to_console=True)
         players[steamid] = player
     else:
         audit_log(f"{player}:{steamid} Has Left The Server", log_to_console=True)
