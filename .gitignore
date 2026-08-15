@@ -13,6 +13,7 @@ checksums.ini
 load_venv.bat
 inputs.txt
 *.db
+*.backup
 apptest1.py
 Client.ini
 motd.txt

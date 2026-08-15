@@ -119,16 +119,34 @@ def gen_ssh_key():
     public_key = f"{rsa_key.get_name()} {rsa_key.get_base64()}"
     with open(os.path.join(os.getcwd(), "ssh_key", "id_rsa.pub"), 'w') as f:
         f.write(public_key)
+def add_column_if_not_exists(db, table, column_name, column_type, default=None):
+    with sqlite3.connect(db) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"PRAGMA table_info({table})")
 
+        columns = []
+        for row in cursor.fetchall():
+            columns.append(row[1])
+        if column_name not in columns:
+            if default:
+                sql_cmd = f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type} NOT NULL DEFAULT {default}"
+            else:
+                sql_cmd = f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type}"
+            print(sql_cmd)
+            cursor.execute(sql_cmd)
+            conn.commit()
 def init_chat_db(db):
     with sqlite3.connect(db) as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS chat (
                         message PRIMARY KEY,
-                        cmd TEXT
+                        cmd TEXT,
+                        send_msg BOOLEAN NOT NULL DEFAULT 1
                      )
                      """)
         
+        
         cursor = conn.cursor()
+        add_column_if_not_exists(db, "chat", "send_msg", "BOOLEAN", "1")
         cursor.execute('SELECT EXISTS (SELECT 1 FROM chat LIMIT 1)')
         not_empty = cursor.fetchone()[0]
 
@@ -763,24 +781,37 @@ def chat_send():
             f.close()
     cmd = ""
     valid = False
+    send = True
     #time.sleep(1)
 
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT message, cmd FROM chat")
+        cursor.execute("SELECT message, cmd, send FROM chat")
         rows = cursor.fetchall()
-    for trigger, command in rows:
+    for trigger, command, send_bool in rows:
         if message == trigger:
             valid = True
             cmd = command
+            if send_bool:
+                send = True
+            else:
+                send = False
             break
         if re.sub(r'[^a-zA-Z0-9 ]', '', message) == trigger:
             valid = True
             cmd = command
+            if send_bool:
+                send = True
+            else:
+                send = False
             break
         if trigger in message.split():
             valid = True
             cmd = command
+            if send_bool:
+                send = True
+            else:
+                send = False
             break
     if valid:
         cmd = cmd.replace("{player}", player)
@@ -792,9 +823,9 @@ def chat_send():
         cmd = cmd.replace("{rgb}", "\x07")
         cmd = cmd.replace("{default}", "\x01")
         print(cmd)
-        return jsonify({"valid" : True, "cmd" : cmd}), 200
+        return jsonify({"valid" : True, "send" : send, "cmd" : cmd}), 200
     else:
-        return jsonify({"valid" : False}), 200
+        return jsonify({"valid" : False, "send" : send}), 200
 @app.route("/ord/pawn/submit", methods=['POST'])
 @auth_required
 def pawn_submit():
