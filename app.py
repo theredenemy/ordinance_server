@@ -409,7 +409,7 @@ def check_ip():
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     username = get_username()
-    if not request.path in no_log_endpoints:
+    if not request.path in no_log_endpoints and not request.path == "/ord/info":
         audit_log(f"IP:{request.remote_addr} USER:{username} : METHOD:{request.method} >> URL:{request.url}", log_to_console=False)
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
@@ -452,6 +452,7 @@ def error_404(e):
     ip_list.append(ip)
     counts = Counter(ip_list)
     if counts[ip] >= 10:
+        audit_log(f"Temp Banning {ip}", log_to_console=True)
         temp_ban_list.append(ip)
         return "BYEBYE", 200
     return "404 Not Found", 404
