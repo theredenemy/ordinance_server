@@ -751,7 +751,6 @@ def admin_chat_ui():
         message = request.form.get('message')
         cmd = request.form.get('cmd')
         send_msg = request.form.get('send_msg')
-        print(send_msg)
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
                 conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, (send_msg == 'on')))
