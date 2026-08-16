@@ -123,7 +123,6 @@ def add_column_if_not_exists(db, table, column_name, column_type, default=None):
     with sqlite3.connect(db) as conn:
         cursor = conn.cursor()
         cursor.execute(f"PRAGMA table_info({table})")
-
         columns = []
         for row in cursor.fetchall():
             columns.append(row[1])
@@ -751,14 +750,16 @@ def admin_chat_ui():
     if request.method == "POST":
         message = request.form.get('message')
         cmd = request.form.get('cmd')
+        send_msg = request.form.get('send_msg')
+        print(send_msg)
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
-                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, True))
+                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, (send_msg == 'on')))
             audit_log(f"USER : {get_username()} MESSAGE : {message} CMD : {cmd}")
             return '<script>window.location.href="/ord/chat/admin";</script>'
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT message, cmd FROM chat")
+        cursor.execute("SELECT message, cmd, send_msg FROM chat")
         rows = cursor.fetchall()
     return render_template("chat_admin_ui.html", commands=rows)
 
