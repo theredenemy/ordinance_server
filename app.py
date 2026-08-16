@@ -751,10 +751,11 @@ def admin_chat_ui():
         message = request.form.get('message')
         cmd = request.form.get('cmd')
         send_msg = request.form.get('send_msg')
+        send_msg_bool = (send_msg == 'on')
         if message and cmd:
             with sqlite3.connect(chat_db) as conn:
-                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, (send_msg == 'on')))
-            audit_log(f"USER : {get_username()} MESSAGE : {message} CMD : {cmd}")
+                conn.execute("INSERT OR REPLACE INTO chat (message, cmd, send_msg) VALUES (?, ?, ?)", (message.lower(), cmd, send_msg_bool))
+            audit_log(f"USER : {get_username()} MESSAGE : {message} CMD : {cmd} SEND_MESSAGE : {send_msg_bool}")
             return '<script>window.location.href="/ord/chat/admin";</script>'
     with sqlite3.connect(chat_db) as conn:
         cursor = conn.cursor()
