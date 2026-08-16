@@ -394,6 +394,9 @@ def render_play():
             os.remove(path)
             
     dont_render = False
+def del_message_trigger(message):
+    with sqlite3.connect(chat_db) as conn:
+        conn.execute("DELETE FROM chat WHERE message = ?", (message,))
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -744,8 +747,7 @@ def admin_chat_ui():
         return "FUCK YOU BREAK", 403
     delete_button_trigger = request.args.get("delete")
     if delete_button_trigger:
-        with sqlite3.connect(chat_db) as conn:
-            conn.execute("DELETE FROM chat WHERE message = ?", (delete_button_trigger,))
+        del_message_trigger(delete_button_trigger)
         return '<script>window.location.href="/ord/chat/admin";</script>'
     if request.method == "POST":
         message = request.form.get('message')
