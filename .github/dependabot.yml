@@ -12,5 +12,5 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 3
-      exclude: |
-        vid2vtf
+      exclude:
+       - vid2vtf
