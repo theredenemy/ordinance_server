@@ -915,6 +915,7 @@ def ord_render():
     ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
     port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
     ren_inputs = []
+    audit_log("START RENDER", log_to_console=True)
     if not os.path.isdir(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     if dont_render:
