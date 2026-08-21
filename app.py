@@ -381,7 +381,7 @@ def render_play():
                 os.system(f'ffmpeg -y -i {os.path.join(os.getcwd(), video_name)} -vf "scale=256:128" -ar 11025 {os.path.join(view_dir, video_name)}')
                 #shutil.copyfile(os.path.join(os.getcwd(), video_name), os.path.join(view_dir, video_name))
             os.remove(path)
-            vid2vtf.video_to_vtf(video=os.path.join(view_dir, video_name), width=256, height=128, use_video_fps=True, output_filename="view", output_dir=view_dir)
+            vid2vtf.video_to_vtf(video=os.path.join(view_dir, video_name), fps=15, width=256, height=128, output_filename="view", output_dir=view_dir)
             materials_dir = os.path.join(view_dir, "materials")
             sound_dir = os.path.join(view_dir, "sound")
             UploadFiles.upload_dir(materials_dir, "/tf/materials", host, sftp_port, user, ssh_keyfile)
