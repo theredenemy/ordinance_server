@@ -845,7 +845,7 @@ def pawn_submit():
     playerclass = json_data['playerclass']
     
 
-    print(player, timestamp, date, trigger, team, weapon, playerclass)
+    audit_log(f"{player} {timestamp} {date} {trigger} {team} {weaponplayerclass}")
     configHelper.set_config(config_file, "ORDINANCE", "player", player)
     configHelper.set_config(config_file, "ORDINANCE", "timestamp", timestamp)
     configHelper.set_config(config_file, "ORDINANCE", "date", date)
