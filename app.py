@@ -8,6 +8,7 @@ from flask import abort
 from flask_apscheduler import APScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
+from add_column_if_not_exists import add_column_if_not_exists
 from auth import auth_required, init_auth_db, edit_user, gen_ord_key, add_ord_key, get_db, admin_only
 import auth as au
 import os
@@ -57,6 +58,7 @@ allow_ord_play = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_p
 allow_ord_play_video_download = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_video_download", is_bool=True, default_value=True)
 allow_ord_play_img_playback = configHelper.read_config(config_file, "ORDINANCE", "allow_ord_play_img_playback", is_bool=True, default_value=True)
 block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
+game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False)
 host = configHelper.read_config(config_file, "sftp", "host", default_value="127.0.0.1")
 sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
 user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky")
@@ -119,21 +121,6 @@ def gen_ssh_key():
     public_key = f"{rsa_key.get_name()} {rsa_key.get_base64()}"
     with open(os.path.join(os.getcwd(), "ssh_key", "id_rsa.pub"), 'w') as f:
         f.write(public_key)
-def add_column_if_not_exists(db, table, column_name, column_type, default=None):
-    with sqlite3.connect(db) as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"PRAGMA table_info({table})")
-        columns = []
-        for row in cursor.fetchall():
-            columns.append(row[1])
-        if column_name not in columns:
-            if default:
-                sql_cmd = f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type} NOT NULL DEFAULT {default}"
-            else:
-                sql_cmd = f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type}"
-            print(sql_cmd)
-            cursor.execute(sql_cmd)
-            conn.commit()
 def init_chat_db(db):
     with sqlite3.connect(db) as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS chat (
@@ -715,7 +702,8 @@ def ordinance_ui():
     return render_template("ordinance_ui.html", inputs=' '.join(inputs), mode=mode, state=state)
 @app.route("/server/status")
 def server_status():
-    return jsonify({"server_start_timestamp" : server_start_timestamp, "temp_bans" : len(temp_ban_list)})
+    game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False)
+    return jsonify({"server_start_timestamp" : server_start_timestamp, "temp_bans" : len(temp_ban_list), "game_end" : game_end})
 @app.route("/ord/info")
 def show_info():
     player = configHelper.read_config(config_file, "ORDINANCE", "player", default_value="SERVICE", is_int=False)
@@ -727,8 +715,9 @@ def show_info():
     playerclass = configHelper.read_config(config_file, "ORDINANCE", "playerclass", default_value="UNKNOWN", is_int=False)
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False)
     joined_inputs = ' '.join(inputs)
-    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp}), 200
+    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp, "game_end" : game_end}), 200
 @app.route("/ord/mode", methods=['POST'])
 @auth_required
 def set_mode():
@@ -918,7 +907,7 @@ def ord_render():
     audit_log("START RENDER", log_to_console=True)
     if not os.path.isdir(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    if dont_render:
+    if dont_render or game_end:
         return jsonify({'message': "NO_INPUT"}), 200
     if state == "dead":
         inputs = []

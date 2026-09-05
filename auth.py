@@ -7,9 +7,11 @@ import sqlite3
 import os
 import secrets
 import configHelper
+from add_column_if_not_exists import add_column_if_not_exists
 db_file = None 
 use_token = False
 admins_file = "admins.ini"
+user_lock_file = "user_lock.ini"
 def get_db():
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
@@ -73,6 +75,8 @@ def auth_required(f):
             if user and check_password_hash(user['password'], auth.password):
                 use_token = False
                 print(f"User Login : {auth.username}")
+                if configHelper.read_config(user_lock_file, auth.username, "lock", is_bool=True, default_value=False):
+                    return "This User Has Been Locked", 401
                 return f(*args, **kwargs)
             else:
                 return make_response("<h1>TO USER YOU DO NOT HAVE PERMISSION TO VIEW THIS DATA PLEASE TRY AGAIN LATER</h1>", 401, {'WWW-Authenticate': 'Basic realm="PLEASE LOGIN TO ORDINANCE BREAK"'})
