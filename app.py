@@ -50,6 +50,12 @@ chat_db = "chat.db"
 auth_db = "auth.db"
 parent_log_request = serving.WSGIRequestHandler.log_request
 dont_render = False
+
+if os.path.isfile(client_config_file) == False:
+    makeClientConfig()
+if os.path.isfile(config_file) == False:
+    makeConfig()
+
 data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
@@ -77,10 +83,7 @@ if not os.path.isdir(UPLOAD_FOLDER):
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
-if os.path.isfile(client_config_file) == False:
-    makeClientConfig()
-if os.path.isfile(config_file) == False:
-    makeConfig()
+
 def log_request(self, *args, **kwargs):
     if self.path in no_log_endpoints:
         return
@@ -683,7 +686,7 @@ def redirect_to_ordinance_ui():
 def ordinance_ui():
     global inputs
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
-    state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    state = configHelper.read_config(config_file, "ORDINANCE", "state", default_value="alive")
     if au.use_token:
         return "FUCK YOU BREAK", 403
     if request.method == 'POST':
@@ -714,7 +717,7 @@ def show_info():
     weapon = configHelper.read_config(config_file, "ORDINANCE", "weapon", default_value="UNKNOWN", is_int=False)
     playerclass = configHelper.read_config(config_file, "ORDINANCE", "playerclass", default_value="UNKNOWN", is_int=False)
     mode = configHelper.read_config(config_file, "ORDINANCE", "mode", default_value="game", is_int=False)
-    state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    state = configHelper.read_config(config_file, "ORDINANCE", "state", default_value="alive")
     game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False)
     joined_inputs = ' '.join(inputs)
     return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp, "game_end" : game_end}), 200
