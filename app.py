@@ -486,7 +486,7 @@ scheduler.start()
 def check_ip():
     original_ip = request.remote_addr
     cloudflare_ip_header = request.headers.get("CF-Connecting-IP")
-    print("Cloudflare:", is_cloudflare_ip(original_ip))
+    #print("Cloudflare:", is_cloudflare_ip(original_ip))
     if cloudflare_ip_header:
         if is_cloudflare_ip(original_ip):
             request.remote_addr = cloudflare_ip_header
