@@ -504,12 +504,7 @@ def check_ip():
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
-    username = get_username()
-    log_msg = f"IP:{ip} USER:{username} : METHOD:{request.method} >> URL:{request.url}"
-    if not request.path in no_log_endpoints:
-        print(log_msg)
-    if not request.path in no_log_endpoints and not request.path == "/ord/info":
-        audit_log(log_msg, log_to_console=False)
+    
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
         data = json.loads(ipinfo.text)
@@ -543,6 +538,18 @@ def check_ip():
         # this song is a banger
         # WAR WITHOUT REASON
         return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
+@app.after_request
+def log_response(resp):
+    username = get_username()
+    log_str = f"IP:{request.remote_addr} CODE:{resp.status_code} USER:{username} : METHOD:{request.method} >> URL:{request.url}"
+    ti_c = time.ctime(time.time())
+    time_c = time.strptime(ti_c)
+    log_msg = f"{time.strftime("%Y-%m-%d-%H:%M:%S", time_c)} : {log_str}"
+    if not request.path in no_log_endpoints:
+        print(log_msg)
+    if not request.path in no_log_endpoints and not request.path == "/ord/info":
+        audit_log(log_str, log_to_console=False)
+    return resp
 @app.errorhandler(404)
 def error_404(e):
     global ip_list
