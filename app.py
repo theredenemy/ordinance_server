@@ -507,7 +507,8 @@ def check_ip():
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     username = get_username()
     log_msg = f"IP:{ip} USER:{username} : METHOD:{request.method} >> URL:{request.url}"
-    print(log_msg)
+    if not request.path in no_log_endpoints:
+        print(log_msg)
     if not request.path in no_log_endpoints and not request.path == "/ord/info":
         audit_log(log_msg, log_to_console=False)
     try:
