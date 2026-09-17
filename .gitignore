@@ -20,10 +20,10 @@ motd.txt
 ipbans.txt
 post_data_logs.txt
 chat_logs.txt
-test2.py
-test3.py
+test*.py
 admins.ini
 requirements.txt.old
 uninstall_pkg.txt
 audit_logs.txt
 user_lock.ini
+cloudflare_ip_ranges.json

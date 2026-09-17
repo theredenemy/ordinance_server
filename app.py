@@ -25,6 +25,7 @@ import re
 import time
 import requests
 import json
+import ipaddress
 import paramiko
 import UploadFiles
 import pathlib
@@ -49,12 +50,60 @@ client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
 parent_log_request = serving.WSGIRequestHandler.log_request
+parent_handle_func = serving.WSGIRequestHandler.handle
 dont_render = False
 
 if os.path.isfile(client_config_file) == False:
     makeClientConfig()
 if os.path.isfile(config_file) == False:
     makeConfig()
+def get_cloudflare_ips():
+    try:
+        print("Downloading Cloudflare IP Ranges")
+        file_data = requests.get("https://api.cloudflare.com/client/v4/ips", allow_redirects=True, timeout=2)
+        req_json = json.loads(file_data.content)
+        if req_json["success"]:
+            print("got it")
+            open("cloudflare_ip_ranges.json", 'wb').write(file_data.content)
+        else:
+            print("API Error. Trying Cached JSON File")
+    except Exception as e:
+        print("Failed Download. Trying Cached JSON File")
+    if not os.path.isfile("cloudflare_ip_ranges.json"):
+        print("NO JSON")
+        return None
+    with open("cloudflare_ip_ranges.json", 'r', encoding='utf-8', errors='ignore') as f:
+        json_data1 = json.load(f)
+        json_data = json_data1["result"]
+
+    ipv4_netmask_list = []
+    ipv6_netmask_list = []
+    ipv4_cidr_list = []
+    ipv6_cidr_list = []
+    with open("cloudflare_ip_ranges.json", 'r', encoding='utf-8', errors='ignore') as f:
+        json_data1 = json.load(f)
+        json_data = json_data1["result"]
+
+    for ip_cidr in json_data["ipv4_cidrs"]:
+        ipv4_cidr_list.append(ip_cidr)
+        ipv4_netmask_list.append(str(ipaddress.ip_network(ip_cidr).netmask))
+    
+    for ip_cidr in json_data["ipv6_cidrs"]:
+        ipv6_cidr_list.append(ip_cidr)
+        ipv6_netmask_list.append(str(ipaddress.ip_network(ip_cidr).netmask))
+    
+    cloudflare_ips_cidr_list = []
+    cloudflare_ipv4_netmask_list = []
+    cloudflare_ipv6_netmask_list = []
+    for ipv4 in ipv4_cidr_list:
+        cloudflare_ips_cidr_list.append(str(ipv4))
+    for ipv6 in ipv6_cidr_list:
+        cloudflare_ips_cidr_list.append(str(ipv6))
+    for ipv4_netmask in ipv4_netmask_list:
+        cloudflare_ipv4_netmask_list.append(str(ipv4_netmask))
+    for ipv6_netmask in ipv6_cidr_list:
+        cloudflare_ipv6_netmask_list.append(str(ipv6_netmask))
+    return cloudflare_ips_cidr_list, cloudflare_ipv4_netmask_list, cloudflare_ipv6_netmask_list
 
 data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
@@ -70,10 +119,12 @@ sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=
 user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky")
 ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value=os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
 ip_list = []
+cloudflare_cidr, cloudflare_ipv4_netmasks, cloudflare_ipv6_netmasks  = get_cloudflare_ips()
 temp_ban_list = []
 inputs = []
 players = {}
 server_start_timestamp = int(time.time())
+
 UPLOAD_FOLDER = 'ord_play/render'
 ALLOWED_EXTENSIONS = {'dat', 'vtf'}
 ALLOWED_VIDEO_DATA_EXTENSIONS = {'mp4', 'mkv'}
@@ -83,18 +134,39 @@ if not os.path.isdir(UPLOAD_FOLDER):
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
-
 def log_request(self, *args, **kwargs):
     if self.path in no_log_endpoints:
         return
     parent_log_request(self, *args, **kwargs)
+# def handle(self, *args, **kwargs):
+#     print("HANDLE", self.address_string())
+#     parent_handle_func(self, *args, **kwargs)
 serving.WSGIRequestHandler.log_request = log_request
+# serving.WSGIRequestHandler.handle = handle
 def is_url(url):
     try:
         url_r = urlparse(url)
         return all([url_r.scheme in ['http', 'https'], url_r.netloc])
     except ValueError:
         return False
+def is_cloudflare_ip(ip):
+    try:
+        ip_ver = ipaddress.ip_address(ip).version
+    except ValueError:
+        return False
+    if ip_ver == 4:
+        cloudflare_netmasks = cloudflare_ipv4_netmasks
+    elif ip_ver == 6:
+        cloudflare_netmasks = cloudflare_ipv6_netmasks
+    else:
+        return False
+    for netmask in cloudflare_netmasks:
+        cidr = ipaddress.ip_interface((ip, netmask)).network
+        
+        if str(cidr) in cloudflare_cidr:
+            return True
+    return False
+
 
 def check_data_name(data_str):
     try:
@@ -412,6 +484,15 @@ def clear_temp_bans():
 scheduler.start()
 @app.before_request
 def check_ip():
+    original_ip = request.remote_addr
+    cloudflare_ip_header = request.headers.get("CF-Connecting-IP")
+    print("Cloudflare:", is_cloudflare_ip(original_ip))
+    if cloudflare_ip_header:
+        if is_cloudflare_ip(original_ip):
+            request.remote_addr = cloudflare_ip_header
+        else:
+            return "CONGRATULATIONS AND WELCOME PLEASE ENTER WITH CAUTION YOU ARE NOT WELCOME HERE", 403
+    
     ip = request.remote_addr
     banlist = []
     db = get_db()
