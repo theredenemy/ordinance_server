@@ -495,7 +495,6 @@ def check_ip():
     if cloudflare_ip_header:
         if is_cloudflare_ip(original_ip):
             request.remote_addr = cloudflare_ip_header
-            print(cloudflare_ip_header)
         else:
             return "CONGRATULATIONS AND WELCOME PLEASE ENTER WITH CAUTION YOU ARE NOT WELCOME HERE", 403
     
