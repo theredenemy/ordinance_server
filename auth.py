@@ -74,7 +74,7 @@ def auth_required(f):
             user = db.execute('SELECT * FROM users WHERE username = ?', (auth.username,)).fetchone()
             if user and check_password_hash(user['password'], auth.password):
                 use_token = False
-                print(f"User Login : {auth.username}")
+                #print(f"User Login : {auth.username}")
                 if configHelper.read_config(user_lock_file, auth.username, "lock", is_bool=True, default_value=False):
                     return "This User Has Been Locked", 401
                 return f(*args, **kwargs)

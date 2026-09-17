@@ -29,6 +29,8 @@ import ipaddress
 import paramiko
 import UploadFiles
 import pathlib
+from wsgiref import types
+import logging
 from urllib.parse import urlparse
 from collections import Counter
 
@@ -134,10 +136,13 @@ if not os.path.isdir(UPLOAD_FOLDER):
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
+        
+
 def log_request(self, *args, **kwargs):
-    if self.path in no_log_endpoints:
-        return
-    parent_log_request(self, *args, **kwargs)
+    return
+    # if self.path in no_log_endpoints:
+    #     return
+    # parent_log_request(self, *args, **kwargs)
 # def handle(self, *args, **kwargs):
 #     print("HANDLE", self.address_string())
 #     parent_handle_func(self, *args, **kwargs)
@@ -501,8 +506,10 @@ def check_ip():
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     username = get_username()
+    log_msg = f"IP:{ip} USER:{username} : METHOD:{request.method} >> URL:{request.url}"
+    print(log_msg)
     if not request.path in no_log_endpoints and not request.path == "/ord/info":
-        audit_log(f"IP:{request.remote_addr} USER:{username} : METHOD:{request.method} >> URL:{request.url}", log_to_console=False)
+        audit_log(log_msg, log_to_console=False)
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
         data = json.loads(ipinfo.text)
