@@ -120,6 +120,8 @@ host = configHelper.read_config(config_file, "sftp", "host", default_value="127.
 sftp_port = configHelper.read_config(config_file, "sftp", "port", default_value=21, is_int=True)
 user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky")
 ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value=os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
+ip_ban_redirect = configHelper.read_config(config_file, "ip_ban", "ip_ban_redirect", is_bool=True, default_value=True)
+ip_ban_url = configHelper.read_config(config_file, "ip_ban", "ip_ban_url", default_value="https://www.youtube.com/watch?v=Elj4zDLqJvw")
 ip_list = []
 cloudflare_cidr, cloudflare_ipv4_netmasks, cloudflare_ipv6_netmasks  = get_cloudflare_ips()
 temp_ban_list = []
@@ -148,6 +150,13 @@ def log_request(self, *args, **kwargs):
 #     parent_handle_func(self, *args, **kwargs)
 serving.WSGIRequestHandler.log_request = log_request
 # serving.WSGIRequestHandler.handle = handle
+
+def check_for_ip_ban_page():
+    if not os.path.isfile("ip_ban_page.html"):
+        with open("ip_ban_page.html", 'w', encoding="utf-8", errors='ignore') as f:
+            f.write("YOU ARE UNWELL BREAK")
+    return
+check_for_ip_ban_page()
 def is_url(url):
     try:
         url_r = urlparse(url)
@@ -261,6 +270,8 @@ def console():
         try:
             global players
             cmd = input()
+            if cmd.lower() == "help":
+                print("help\nedit_user\ndel_user\nplayers\ngen_ssh_key\nreset_timestamp\nexit")
             if cmd.lower() == "edit_user":
                 print("ENTER USERNAME\n")
                 user = input()
@@ -285,7 +296,7 @@ def console():
             if cmd.lower() == "reset_timestamp":
                 global server_start_timestamp
                 server_start_timestamp = time.time()
-            if cmd == "exit".lower():
+            if cmd.lower() == "exit":
                 print("shutdown\n")
                 os._exit(0)
         except Exception as e:
@@ -504,6 +515,8 @@ def check_ip():
     use_token = False
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
+    ip_ban_redirect = configHelper.read_config(config_file, "ip_ban", "ip_ban_redirect", is_bool=True, default_value=True)
+    ip_ban_url = configHelper.read_config(config_file, "ip_ban", "ip_ban_url", default_value="https://www.youtube.com/watch?v=Elj4zDLqJvw")
     
     try:
         ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
@@ -533,11 +546,21 @@ def check_ip():
         ord_key = db.execute('SELECT * FROM tokens WHERE token = ?', (key_header,)).fetchone()
         if ord_key:
             use_token = True
-    if ip in banlist and not use_token or ip in temp_ban_list and not use_token or vpn and not use_token and block_vpn:
+    if ip in banlist and not use_token and not request.path == "/ipban" or ip in temp_ban_list and not use_token and not request.path == "/ipban" or vpn and not use_token and block_vpn and not request.path == "/ipban":
         print("IP IS BANNED")
-        # this song is a banger
-        # WAR WITHOUT REASON
-        return redirect("https://www.youtube.com/watch?v=Elj4zDLqJvw")
+        if ip_ban_redirect:
+            return redirect(ip_ban_url)
+        else:
+            return redirect("/ipban")
+@app.route("/ipban")
+def ip_ban_webpage():
+    check_for_ip_ban_page()
+    with open("ip_ban_page.html", 'r', encoding="utf-8", errors='ignore') as f:
+        webpage = f.read()
+    return webpage
+    
+
+
 @app.after_request
 def log_response(resp):
     username = get_username()

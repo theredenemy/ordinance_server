@@ -27,3 +27,4 @@ uninstall_pkg.txt
 audit_logs.txt
 user_lock.ini
 cloudflare_ip_ranges.json
+ip_ban_page.html
