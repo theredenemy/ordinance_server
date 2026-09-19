@@ -551,7 +551,11 @@ def check_ip():
         if ip_ban_redirect:
             return redirect(ip_ban_url)
         else:
-            return redirect("/ipban")
+            check_for_ip_ban_page()
+            with open("ip_ban_page.html", 'r', encoding="utf-8", errors='ignore') as f:
+                webpage = f.read()
+            return webpage
+            
 @app.route("/ipban")
 def ip_ban_webpage():
     check_for_ip_ban_page()
