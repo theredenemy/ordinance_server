@@ -1094,9 +1094,6 @@ def ord_render():
             pass
         render_inputs_thread = threading.Thread(target=send_render_text_file, kwargs={"filename": "inputs.txt", "ip": ip, "port": port, "mac": mac_a, "wol": wol}, daemon=True)
         render_inputs_thread.start()
-        # sendfile = client.SendFile("inputs.txt", ip, port)
-        # if not sendfile:
-        #     return jsonify({'message': "NO_INPUT"}), 200
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     skip = False
@@ -1115,9 +1112,13 @@ def ord_render():
         f.write("\n".join(ren_inputs))
         f.close
     inputs = []
-    sendfile = client.SendFile("inputs.txt", ip, port)
-    if not sendfile:
-        return jsonify({'message': "NO_INPUT"}), 200
+    if render_inputs_thread_queue < 0: 
+        render_inputs_thread_queue = 0
+    render_inputs_thread_queue += 1
+    while (render_inputs_thread_queue > 1):
+        pass
+    render_inputs_thread = threading.Thread(target=send_render_text_file, kwargs={"filename": "inputs.txt", "ip": ip, "port": port, "mac": mac_a, "wol": wol}, daemon=True)
+    render_inputs_thread.start()
 
     return jsonify({'message': "RENDER"}), 200
 
