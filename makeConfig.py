@@ -41,9 +41,10 @@ def makeClientConfig():
 
    config_file.add_section("Client")
 
-
+   config_file.set("Client", "wol", "False")
    config_file.set("Client", "ip", "127.0.0.1")
    config_file.set("Client", "port", "4456")
+   config_file.set("Client", "mac_a", "FF:FF:FF:FF:FF")
 
 
    with open(r"Client.ini", 'w') as configfileObj:

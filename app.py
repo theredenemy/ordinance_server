@@ -22,6 +22,8 @@ import client
 import traceback
 import sqlite3
 import re
+import wakeonlan
+import socket
 import time
 import requests
 import json
@@ -51,6 +53,8 @@ ip_bans_file = "ipbans.txt"
 client_config_file = "Client.ini"
 chat_db = "chat.db"
 auth_db = "auth.db"
+render_inputs_thread_queue = 0
+
 parent_log_request = serving.WSGIRequestHandler.log_request
 parent_handle_func = serving.WSGIRequestHandler.handle
 dont_render = False
@@ -122,6 +126,12 @@ user = configHelper.read_config(config_file, "sftp", "user", default_value="fsky
 ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value=os.path.join(os.getcwd(), "ssh_key", "id_rsa"))
 ip_ban_redirect = configHelper.read_config(config_file, "ip_ban", "ip_ban_redirect", is_bool=True, default_value=True)
 ip_ban_url = configHelper.read_config(config_file, "ip_ban", "ip_ban_url", default_value="https://www.youtube.com/watch?v=Elj4zDLqJvw")
+# Client Config
+wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False)
+ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
+port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
+mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF:FF:FF:FF:FF:FF")
+# Init Vars
 ip_list = []
 cloudflare_cidr, cloudflare_ipv4_netmasks, cloudflare_ipv6_netmasks  = get_cloudflare_ips()
 temp_ban_list = []
@@ -138,7 +148,6 @@ if not os.path.isdir(UPLOAD_FOLDER):
 scheduler = APScheduler()
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_port=1)
-        
 
 def log_request(self, *args, **kwargs):
     return
@@ -472,6 +481,32 @@ def render_play():
             os.remove(path)
             
     dont_render = False
+
+def check_server(ip, port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(3)
+            s.connect((ip, port))
+            return True
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
+def send_render_text_file(filename, ip, port, mac, wol=False):
+    global render_inputs_thread_queue
+    if not check_server(ip, port):
+        if wol:
+            audit_log(f"Sending Magic Packet To {ip}/{mac}")
+            wakeonlan.wake(mac, host=ip)
+        while not (check_server(ip, port)):
+            time.sleep(1)
+            if render_inputs_thread_queue > 1:
+                audit_log("NEW INPUTS. Discarding Old Inputs")
+                render_inputs_thread_queue -= 1
+                return False
+    client.SendFile(filename, ip, port)
+    render_inputs_thread_queue -= 1
+    return True
+
+
 def del_message_trigger(message):
     with sqlite3.connect(chat_db) as conn:
         conn.execute("DELETE FROM chat WHERE message = ?", (message,))
@@ -1026,9 +1061,12 @@ def ord_play():
 def ord_render():
     global inputs
     global dont_render
+    global render_inputs_thread_queue
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
+    wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False)
     ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
     port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
+    mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF:FF:FF:FF:FF:FF")
     ren_inputs = []
     audit_log("START RENDER", log_to_console=True)
     if not os.path.isdir(UPLOAD_FOLDER):
@@ -1049,9 +1087,16 @@ def ord_render():
             f.write("RENDER")
             f.close
         inputs = []
-        sendfile = client.SendFile("inputs.txt", ip, port)
-        if not sendfile:
-            return jsonify({'message': "NO_INPUT"}), 200
+        if render_inputs_thread_queue < 0: 
+            render_inputs_thread_queue = 0
+        render_inputs_thread_queue += 1
+        while (render_inputs_thread_queue > 1):
+            pass
+        render_inputs_thread = threading.Thread(target=send_render_text_file, kwargs={"filename": "inputs.txt", "ip": ip, "port": port, "mac": mac_a, "wol": wol}, daemon=True)
+        render_inputs_thread.start()
+        # sendfile = client.SendFile("inputs.txt", ip, port)
+        # if not sendfile:
+        #     return jsonify({'message': "NO_INPUT"}), 200
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
     skip = False
