@@ -498,7 +498,7 @@ def send_render_text_file(filename, ip, port, mac, wol=False):
             wakeonlan.wake(mac, host=ip,port=9)
         while not (check_server(ip, port)):
             time.sleep(1)
-            if render_inputs_thread_queue > 1:
+            if render_inputs_thread_queue > 1 or dont_render:
                 audit_log("NEW INPUTS. Discarding Old Inputs")
                 render_inputs_thread_queue -= 1
                 return False
@@ -878,7 +878,7 @@ def show_info():
     state = configHelper.read_config(config_file, "ORDINANCE", "state", default_value="alive")
     game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False)
     joined_inputs = ' '.join(inputs)
-    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp, "game_end" : game_end}), 200
+    return jsonify({"player" : player, "timestamp" : timestamp, "date" : date, "trigger" : trigger, "team" : team, "weapon" : weapon, "playerclass" : playerclass, "mode" : mode, "state" : state, "inputs" : joined_inputs, "server_start_timestamp" : server_start_timestamp, "game_end" : game_end, "render_inputs_thread_queue" : render_inputs_thread_queue}), 200
 @app.route("/ord/mode", methods=['POST'])
 @auth_required
 def set_mode():
