@@ -1,7 +1,7 @@
 import socket
 import struct
 
-def wake(mac: str):
+def wake(mac: str, host="<broadcast>", port=7):
 
     clean_mac = mac.replace(":", "").replace(".", "").replace("-", "")
 
@@ -15,6 +15,6 @@ def wake(mac: str):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.sendto(send_data, ('<broadcast>', 7))
-    print(clean_mac, data, send_data)
+    sock.sendto(send_data, (host, port))
+    
     return True
