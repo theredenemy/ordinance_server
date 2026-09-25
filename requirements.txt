@@ -9,4 +9,3 @@ pyzbar==0.1.9
 qrcode[all]==8.2
 numpy==2.5.3
 pillow==12.3.0
-wakeonlan==4.0.0

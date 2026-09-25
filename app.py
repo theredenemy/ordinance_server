@@ -22,7 +22,7 @@ import client
 import traceback
 import sqlite3
 import re
-import wakeonlan
+import wol_mod
 import socket
 import time
 import requests
@@ -495,7 +495,7 @@ def send_render_text_file(filename, ip, port, mac, wol=False):
     if not check_server(ip, port):
         if wol:
             audit_log(f"Sending Magic Packet To {ip}/{mac}")
-            wakeonlan.wake(mac, host=ip,port=9)
+            wol_mod.wake(mac)
         while not (check_server(ip, port)):
             time.sleep(1)
             if render_inputs_thread_queue > 1 or dont_render:
