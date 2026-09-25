@@ -7,7 +7,6 @@ def wake(mac: str):
 
     if len(clean_mac) != 12:
         return False
-
     data = ''.join(['FFFFFFFFFFFF', clean_mac * 20])
     send_data = b''
 
@@ -17,4 +16,5 @@ def wake(mac: str):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.sendto(send_data, ('<broadcast>', 7))
+    print(clean_mac, data, send_data)
     return True
