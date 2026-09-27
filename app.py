@@ -548,18 +548,22 @@ def check_ip():
     banlist = []
     db = get_db()
     use_token = False
+    if os.path.isfile(ip_bans_file):
+        file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
+        for ip_ban in file.readlines():
+            banlist.append(ip_ban.strip())
     log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
     block_vpn = configHelper.read_config(config_file, "ORDINANCE", "block_vpn", is_bool=True, default_value=False)
     ip_ban_redirect = configHelper.read_config(config_file, "ip_ban", "ip_ban_redirect", is_bool=True, default_value=True)
     ip_ban_url = configHelper.read_config(config_file, "ip_ban", "ip_ban_url", default_value="https://www.youtube.com/watch?v=Elj4zDLqJvw")
-    
-    try:
-        ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
-        data = json.loads(ipinfo.text)
-        vpn = bool(data.get("proxy"))
-    except Exception as e:
-        print(type(e))
-        vpn = False
+    if not ip in temp_ban_list or not ip in banlist:
+        try:
+            ipinfo = requests.get(f"http://ip-api.com/json/{ip}?fields=66846719")
+            data = json.loads(ipinfo.text)
+            vpn = bool(data.get("proxy"))
+        except Exception as e:
+            print(type(e))
+            vpn = False
     if request.method == "POST" and log_post_requests:
         if request.is_json:
             post_data = request.get_json()
@@ -569,10 +573,7 @@ def check_ip():
             f.write(f"{request.remote_addr} : {post_data}\n")
             f.close()
     
-    if os.path.isfile(ip_bans_file):
-        file = open(ip_bans_file, 'r', encoding="utf-8", errors='ignore')
-        for ip_ban in file.readlines():
-            banlist.append(ip_ban.strip())
+    
     key_header = request.headers.get('X-ORD-KEY')
     is_coffee = request.headers.get("X-COFFEE")
     if is_coffee:
