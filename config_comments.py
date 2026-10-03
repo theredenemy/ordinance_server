@@ -1,0 +1,1 @@
+client_note = "; wol = True/False \n; wol_method = host/hass_webhook \n"

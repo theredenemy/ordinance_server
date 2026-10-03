@@ -2,7 +2,7 @@
 /.vscode
 /venv
 /data
-/ORDINANCE.ini
+/*.ini
 /ord_play
 /view
 /ssh_key

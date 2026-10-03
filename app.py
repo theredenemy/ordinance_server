@@ -45,6 +45,8 @@ import shutil
 import io
 import qrcode
 from pyzbar.pyzbar import decode
+import config_comments
+import hass_api
 
 no_log_endpoints = ["/server/status", "/ord/players/api/senddata", "/ord/players/api/clear"]
 config_file = "ORDINANCE.ini"
@@ -110,7 +112,7 @@ def get_cloudflare_ips():
     for ipv6_netmask in ipv6_cidr_list:
         cloudflare_ipv6_netmask_list.append(str(ipv6_netmask))
     return cloudflare_ips_cidr_list, cloudflare_ipv4_netmask_list, cloudflare_ipv6_netmask_list
-
+# Init Config
 data_dir = os.path.join(os.getcwd(), "data")
 log_post_requests =  configHelper.read_config(config_file, "ORDINANCE", "log_post_requests", is_bool=True, default_value=False)
 log_chat = configHelper.read_config(config_file, "ORDINANCE", "log_chat", is_bool=True, default_value=False)
@@ -127,10 +129,13 @@ ssh_keyfile = configHelper.read_config(config_file, "sftp", "key", default_value
 ip_ban_redirect = configHelper.read_config(config_file, "ip_ban", "ip_ban_redirect", is_bool=True, default_value=True)
 ip_ban_url = configHelper.read_config(config_file, "ip_ban", "ip_ban_url", default_value="https://www.youtube.com/watch?v=Elj4zDLqJvw")
 # Client Config
-wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False)
-ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
-port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
-mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF:FF:FF:FF:FF:FF")
+wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False, comment=config_comments.client_note)
+ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False, comment=config_comments.client_note)
+wol_method = configHelper.read_config(client_config_file, "Client", "wol_method", default_value="host", comment=config_comments.client_note)
+port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True, comment=config_comments.client_note)
+mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF.FF.FF.FF.FF.FF", comment=config_comments.client_note)
+hass_webhook_url = configHelper.read_config(client_config_file, "Hass", "hass_webhook_url", default_value="http://127.0.0.1:8123/api/webhook/WEBHOOK_ID", comment=config_comments.client_note)
+
 # Init Vars
 ip_list = []
 cloudflare_cidr, cloudflare_ipv4_netmasks, cloudflare_ipv6_netmasks  = get_cloudflare_ips()
@@ -173,6 +178,7 @@ def is_url(url):
     except ValueError:
         return False
 def is_cloudflare_ip(ip):
+    # why
     try:
         ip_ver = ipaddress.ip_address(ip).version
     except ValueError:
@@ -293,7 +299,7 @@ def console():
                 if user:
                     print(f"This will delete the user {user} Are you sure you want to do this? (y/n)\n")
                     are_you_sure = input()
-                    if are_you_sure == "y".lower():
+                    if are_you_sure.lower() == "y":
                         with sqlite3.connect(auth_db) as conn:
                             conn.execute("DELETE FROM users WHERE username = ?", (user,))
                         print(f"User {user} Has Been Deleted...")
@@ -492,10 +498,24 @@ def check_server(ip, port):
         return False
 def send_render_text_file(filename, ip, port, mac, wol=False):
     global render_inputs_thread_queue
+    # Move This Later
+    hass_webhook_url = configHelper.read_config(client_config_file, "Hass", "hass_webhook_url", default_value="http://127.0.0.1:8123/api/webhook/WEBHOOK_ID", comment=config_comments.client_note)
+
+    wol_method = configHelper.read_config(client_config_file, "Client", "wol_method", default_value="host", comment=config_comments.client_note)
     if not check_server(ip, port):
         if wol:
-            audit_log(f"Sending Magic Packet To {ip}/{mac}")
-            wol_mod.wake(mac, host=ip, port=9)
+            if wol_method == "host":
+                audit_log(f"Sending Magic Packet To {ip}/{mac} From Host")
+                wol_mod.wake(mac, host=ip, port=9)
+        elif wol_method == "hass_webhook":
+            audit_log(f"Sending Webhook")
+            req = requests.get(hass_webhook_url)
+            print(req.status_code)
+        else:
+            # NOTE: Change The Audit Log Message Dont Fucking Forget This 
+            audit_log("Fail WOL")
+
+            
         while not (check_server(ip, port)):
             time.sleep(1)
             if render_inputs_thread_queue > 1 or dont_render:
@@ -1064,10 +1084,10 @@ def ord_render():
     global dont_render
     global render_inputs_thread_queue
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
-    wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False)
-    ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False)
-    port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True)
-    mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF:FF:FF:FF:FF:FF")
+    wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False, comment=config_comments.client_note)
+    ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False, comment=config_comments.client_note)
+    port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True, comment=config_comments.client_note)
+    mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF.FF.FF.FF.FF.FF", comment=config_comments.client_note)
     ren_inputs = []
     audit_log("START RENDER", log_to_console=True)
     if not os.path.isdir(UPLOAD_FOLDER):
