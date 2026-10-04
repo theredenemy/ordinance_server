@@ -1085,6 +1085,7 @@ def ord_render():
     global render_inputs_thread_queue
     state = configHelper.read_config(config_file, "ORDINANCE", "state")
     wol = configHelper.read_config(client_config_file, "Client", "wol", is_bool=True, default_value=False, comment=config_comments.client_note)
+    game_end = configHelper.read_config(config_file, "ORDINANCE", "game_end", is_bool=True, default_value=False) 
     ip = configHelper.read_config(client_config_file, "Client", "ip", default_value="127.0.0.1", is_int=False, comment=config_comments.client_note)
     port = configHelper.read_config(client_config_file, "Client", "port", default_value=4456, is_int=True, comment=config_comments.client_note)
     mac_a = configHelper.read_config(client_config_file, "Client", "mac_a", default_value="FF.FF.FF.FF.FF.FF", comment=config_comments.client_note)
