@@ -507,13 +507,13 @@ def send_render_text_file(filename, ip, port, mac, wol=False):
             if wol_method == "host":
                 audit_log(f"Sending Magic Packet To {ip}/{mac} From Host")
                 wol_mod.wake(mac, host=ip, port=9)
-        elif wol_method == "hass_webhook":
-            audit_log(f"Sending Webhook")
-            req = requests.get(hass_webhook_url)
-            print(req.status_code)
-        else:
-            # NOTE: Change The Audit Log Message Dont Fucking Forget This 
-            audit_log("Fail WOL")
+            elif wol_method == "hass_webhook":
+                audit_log(f"Sending Webhook")
+                req = requests.get(hass_webhook_url)
+                print(req.status_code)
+            else:
+                # NOTE: Change The Audit Log Message Dont Fucking Forget This 
+                audit_log("Fail WOL")
 
             
         while not (check_server(ip, port)):
