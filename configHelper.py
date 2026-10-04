@@ -12,7 +12,7 @@ def read_config(configfile, section, option, default_value=0, comment=None, is_i
     if os.path.isfile(configfile) == False:
         config.add_section(section)
         config.set(section, option, str(default_value))
-        write_config(configfile, config)
+        write_config(configfile, config, comment=comment)
     config.read(configfile)
     
     if not config.has_section(section):
