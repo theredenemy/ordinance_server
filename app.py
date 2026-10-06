@@ -1093,7 +1093,7 @@ def ord_render():
     audit_log("START RENDER", log_to_console=True)
     if not os.path.isdir(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    if dont_render or game_end:
+    if dont_render:
         return jsonify({'message': "NO_INPUT"}), 200
     if state == "dead":
         inputs = []
@@ -1104,7 +1104,8 @@ def ord_render():
             render_play_thread = threading.Thread(target=render_play, daemon=True)
             render_play_thread.start()
             return jsonify({'message': "RENDER"}), 200                            
-
+        if game_end:
+            return jsonify({'message': "NO_INPUT"}), 200
         with open("inputs.txt", 'w', encoding='utf-8', errors='ignore') as f:
             f.write("RENDER")
             f.close
@@ -1118,6 +1119,8 @@ def ord_render():
         render_inputs_thread.start()
         return jsonify({'message': "RENDER"}), 200
     # Some RENDER CODE
+    if game_end:
+        return jsonify({'message': "NO_INPUT"}), 200
     skip = False
     for i in range(len(inputs)):
         if skip:
